@@ -1,0 +1,6299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#FFF8DC">
+<title>钱钱日记</title>
+<style>
+/* ============================================
+   CSS 变量 & 全局样式
+   ============================================ */
+:root {
+  /* 主色系 — 暖金 */
+  --gold: #F5B800;
+  --gold-light: #FFD84D;
+  --gold-dark: #C99300;
+  --gold-deeper: #8B6914;
+  --cream: #FFF8DC;
+
+  /* 背景与表面 */
+  --warm-bg: #FFFEF9;
+  --card-bg: rgba(255,255,255,0.92);
+  --card-bg-hover: rgba(255,255,255,0.98);
+
+  /* 文字 */
+  --text: #3D2B1F;
+  --text-secondary: #6B5840;
+  --text-light: #A08B70;
+  --text-inverse: #FFFFFF;
+
+  /* 3级阴影系统 — 棕色系，沉稳高级 */
+  --shadow-sm: 0 2px 8px rgba(61,43,31,0.06);
+  --shadow-md: 0 8px 24px rgba(61,43,31,0.10);
+  --shadow-lg: 0 16px 48px rgba(61,43,31,0.16);
+  --shadow: var(--shadow-sm);
+
+  /* 圆角 */
+  --radius: 20px;
+  --radius-sm: 12px;
+  --radius-xs: 8px;
+
+  /* 尺寸 */
+  --nav-height: 68px;
+
+  /* 语义色 — 仅用于状态区分 */
+  --color-success: #4CAF50;
+  --color-info: #2196F3;
+  --color-warning: #FF9800;
+  --color-danger: #E53935;
+
+  /* 阶段色 — 同色系深浅 */
+  --phase1: #66BB6A;
+  --phase2: var(--gold-dark);
+  --phase3: var(--gold-deeper);
+
+  /* 5账户色 — 金色系深浅变化 */
+  --acct-goose: #C99300;
+  --acct-dream: #E8A317;
+  --acct-edu: #F0B429;
+  --acct-joy: #FFC857;
+  --acct-daily: #FFD388;
+
+  /* 兼容旧引用 */
+  --sky: #87CEEB;
+  --mint: #98FB98;
+  --debt-red: #E53935;
+  --level1: #FFB74D;
+  --level2: #64B5F6;
+  --level3: #81C784;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(160deg, #FFF9E6 0%, #FFFEF9 40%, #FFF5E1 100%);
+  background-attachment: fixed;
+  color: var(--text);
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================
+   滚动条美化
+   ============================================ */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(218,165,32,0.3); border-radius: 4px; }
+
+/* ============================================
+   应用容器
+   ============================================ */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+}
+
+/* ============================================
+   顶部问候区域
+   ============================================ */
+#header {
+  padding: 16px 20px 8px;
+  flex-shrink: 0;
+  z-index: 10;
+}
+
+.greeting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.greeting-text {
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.greeting-emoji {
+  font-size: 32px;
+  animation: wave 2s ease-in-out infinite;
+}
+
+.greeting-sub {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-top: 3px;
+  font-weight: 500;
+}
+
+.greeting-date {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 1px;
+  font-weight: 500;
+  opacity: 0.7;
+}
+
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(15deg); }
+  75% { transform: rotate(-10deg); }
+}
+
+/* ============================================
+   主内容容器
+   ============================================ */
+#main-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 16px 8px;
+  padding-bottom: calc(var(--nav-height) + 24px);
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* 页面切换动画 */
+.page {
+  display: none;
+  animation: fadeSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.page.active {
+  display: block;
+}
+
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   卡片样式
+   ============================================ */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(201,147,0,0.06);
+}
+
+.card:active {
+  transform: scale(0.985);
+  box-shadow: var(--shadow-md);
+}
+
+.card-header {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-header .icon {
+  font-size: 18px;
+}
+
+/* ============================================
+   按钮样式
+   ============================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 22px;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  letter-spacing: 0.02em;
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--gold-light), var(--gold));
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(201,147,0,0.28);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(201,147,0,0.36);
+  transform: translateY(-1px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--gold-dark);
+  border: 2px solid var(--gold);
+}
+
+.btn-outline:hover {
+  background: rgba(255,215,0,0.1);
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 12px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-danger {
+  background: var(--debt-red);
+  color: #fff;
+}
+
+.btn-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 20px;
+}
+
+/* ============================================
+   输入框样式
+   ============================================ */
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid rgba(201,147,0,0.12);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  background: rgba(255,255,255,0.7);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+}
+
+.input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px rgba(245,184,0,0.12);
+  background: #fff;
+}
+
+.input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.input-group .input {
+  flex: 1;
+}
+
+/* ============================================
+   标签/徽章
+   ============================================ */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-gold {
+  background: rgba(255,215,0,0.2);
+  color: var(--gold-dark);
+}
+
+.badge-green {
+  background: rgba(76,175,80,0.15);
+  color: var(--phase1);
+}
+
+.badge-blue {
+  background: rgba(33,150,243,0.15);
+  color: var(--phase2);
+}
+
+.badge-purple {
+  background: rgba(156,39,176,0.15);
+  color: var(--phase3);
+}
+
+.badge-red {
+  background: rgba(239,83,80,0.15);
+  color: var(--debt-red);
+}
+
+/* ============================================
+   进度条
+   ============================================ */
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(201,147,0,0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.32, 0.72, 0, 1);
+  background: linear-gradient(90deg, var(--gold-light), var(--gold));
+}
+
+/* ============================================
+   底部导航栏
+   ============================================ */
+#bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: var(--nav-height);
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(201,147,0,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0 8px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 100;
+  box-shadow: 0 -4px 24px rgba(61,43,31,0.06);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  color: var(--text-light);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-item .nav-icon {
+  font-size: 22px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-item .nav-label {
+  font-weight: 500;
+  line-height: 1;
+}
+
+.nav-item.active {
+  color: var(--gold-dark);
+}
+
+.nav-item.active .nav-icon {
+  transform: translateY(-2px) scale(1.15);
+}
+
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-light), var(--gold));
+  border-radius: 0 0 4px 4px;
+}
+
+.nav-item:active {
+  transform: scale(0.9);
+}
+
+/* 更多按钮激活时无指示条 */
+.nav-item.more-tab.active::before {
+  display: none;
+}
+
+/* ============================================
+   子页面导航（更多页面内）
+   ============================================ */
+.sub-nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 12px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.sub-nav::-webkit-scrollbar { display: none; }
+
+.sub-nav-item {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-light);
+  background: rgba(255,255,255,0.6);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.sub-nav-item.active {
+  color: var(--gold-dark);
+  background: rgba(255,215,0,0.12);
+  border-color: var(--gold);
+  font-weight: 600;
+}
+
+/* ============================================
+   Toast 提示
+   ============================================ */
+#toast-container {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  background: rgba(61,43,31,0.95);
+  color: #fff;
+  padding: 12px 22px;
+  border-radius: 28px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-lg);
+  animation: toastIn 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+             toastOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) 2.4s forwards;
+  pointer-events: auto;
+  max-width: 340px;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes toastOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.9);
+  }
+}
+
+/* ============================================
+   撒花/金币动画
+   ============================================ */
+#confetti-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9998;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  animation: confettiFall var(--fall-duration, 2s) cubic-bezier(0.4, 0, 0.2, 1) forwards,
+             confettiShake var(--shake-duration, 0.8s) ease-in-out infinite;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(calc(100vh + 100px)) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes confettiShake {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(20px); }
+}
+
+/* 金币动画 */
+.coin {
+  position: absolute;
+  font-size: 28px;
+  animation: coinDrop 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  pointer-events: none;
+}
+
+@keyframes coinDrop {
+  0% {
+    transform: translateY(-80px) rotate(0deg) scale(0.5);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(60vh) rotate(360deg) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(540deg) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   模态弹窗
+   ============================================ */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(61,43,31,0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-sheet {
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 8px 24px 32px;
+  animation: slideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: var(--shadow-lg);
+  position: relative;
+}
+
+.modal-sheet .modal-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* ============================================
+   空状态
+   ============================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px;
+  text-align: center;
+}
+
+.empty-state .empty-icon {
+  font-size: 56px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+  animation: emptyFloat 3s ease-in-out infinite;
+}
+
+@keyframes emptyFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.empty-state .empty-text {
+  font-size: 15px;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.empty-state .empty-sub {
+  font-size: 13px;
+  color: var(--text-light);
+  opacity: 0.7;
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* ============================================
+   响应式
+   ============================================ */
+@media (min-width: 481px) {
+  #app {
+    border-left: 1px solid rgba(218,165,32,0.08);
+    border-right: 1px solid rgba(218,165,32,0.08);
+  }
+}
+
+@media (max-width: 360px) {
+  .nav-item {
+    min-width: 44px;
+    font-size: 9px;
+  }
+  .nav-item .nav-icon {
+    font-size: 20px;
+  }
+  #header {
+    padding: 12px 14px 6px;
+  }
+  .greeting-text {
+    font-size: 20px;
+  }
+}
+
+/* ============================================
+   工具类
+   ============================================ */
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-gold { color: var(--gold-dark); }
+.text-muted { color: var(--text-light); }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.mb-16 { margin-bottom: 16px; }
+.flex { display: flex; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.gap-8 { gap: 8px; }
+.gap-12 { gap: 12px; }
+.w-full { width: 100%; }
+
+/* ============================================
+   模块1：首页仪表盘 - 新增样式
+   ============================================ */
+
+/* 金鹅概览卡片 */
+.goose-overview-card {
+  background: linear-gradient(135deg, #FFF8DC 0%, #FFF3C4 100%);
+  border-radius: var(--radius);
+  padding: 20px 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 6px 24px rgba(218,165,32,0.2);
+  border: 2px solid rgba(255,215,0,0.3);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.goose-overview-card:active {
+  transform: scale(0.97);
+}
+
+.goose-overview-card .goose-emoji {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  font-size: 48px;
+  animation: gooseFloat 3s ease-in-out infinite;
+}
+
+@keyframes gooseFloat {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-8px) rotate(3deg); }
+}
+
+.goose-overview-card .goose-balance {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.goose-overview-card .goose-label {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+.goose-overview-card .goose-monthly {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gold-dark);
+  background: rgba(255,215,0,0.15);
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+/* 四格统计卡片 */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.stat-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 14px 12px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(218,165,32,0.08);
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.stat-card .stat-icon {
+  font-size: 24px;
+  margin-bottom: 4px;
+}
+
+.stat-card .stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.stat-card .stat-label {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+/* 今日待办进度条 */
+.task-progress-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(218,165,32,0.08);
+}
+
+.task-progress-card .task-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.task-progress-card .task-progress-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-progress-card .task-progress-count {
+  font-size: 13px;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.task-progress-card .progress-bar {
+  height: 10px;
+  border-radius: 5px;
+}
+
+.task-progress-card .progress-fill {
+  border-radius: 5px;
+  background: linear-gradient(90deg, #81C784, #4CAF50);
+}
+
+/* 理财语录轮播 */
+.quote-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(218,165,32,0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.quote-card .quote-icon {
+  font-size: 28px;
+  opacity: 0.3;
+  position: absolute;
+  top: 8px;
+  left: 12px;
+}
+
+.quote-card .quote-text {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.7;
+  font-style: italic;
+  padding: 0 8px;
+  position: relative;
+  z-index: 1;
+  transition: opacity 0.5s ease;
+}
+
+.quote-card .quote-source {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-top: 6px;
+  text-align: right;
+  position: relative;
+  z-index: 1;
+}
+
+.quote-card .quote-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.quote-card .quote-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(218,165,32,0.25);
+  transition: all 0.3s ease;
+}
+
+.quote-card .quote-dot.active {
+  background: var(--gold-dark);
+  transform: scale(1.3);
+}
+
+/* 四大致富支柱卡片（首页2x2网格） */
+.pillars-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pillar-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(218,165,32,0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.pillar-card:active {
+  transform: scale(0.96);
+}
+
+.pillar-card .pillar-icon {
+  font-size: 28px;
+  margin-bottom: 6px;
+}
+
+.pillar-card .pillar-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.pillar-card .pillar-subtitle {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-bottom: 8px;
+  min-height: 16px;
+}
+
+.pillar-card .pillar-score-bar {
+  height: 4px;
+  background: rgba(218,165,32,0.12);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 2px;
+}
+
+.pillar-card .pillar-score-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pillar-dream .pillar-score-fill { background: linear-gradient(90deg, #FFC857, #E8A317); }
+.pillar-goal .pillar-score-fill { background: linear-gradient(90deg, var(--gold-light), var(--gold)); }
+.pillar-values .pillar-score-fill { background: linear-gradient(90deg, var(--gold), var(--gold-dark)); }
+.pillar-strategy .pillar-score-fill { background: linear-gradient(90deg, var(--gold-dark), var(--gold-deeper)); }
+
+/* 价值观思考题展开 */
+.pillar-thinking {
+  margin-top: 8px;
+  padding: 10px;
+  background: rgba(156,39,176,0.06);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-light);
+  line-height: 1.6;
+  display: none;
+}
+
+.pillar-thinking.show {
+  display: block;
+}
+
+/* 收入升级快速状态 */
+.income-status-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(218,165,32,0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.income-status-card:active {
+  transform: scale(0.97);
+}
+
+.income-status-card .income-level-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.income-status-card .income-level-1 .income-level-badge,
+.income-level-badge.level-1 {
+  background: linear-gradient(135deg, #FFB74D, #F57C00);
+}
+
+.income-status-card .income-level-2 .income-level-badge,
+.income-level-badge.level-2 {
+  background: linear-gradient(135deg, #64B5F6, #1976D2);
+}
+
+.income-status-card .income-level-3 .income-level-badge,
+.income-level-badge.level-3 {
+  background: linear-gradient(135deg, #81C784, #388E3C);
+}
+
+.income-status-card .income-level-info {
+  flex: 1;
+}
+
+.income-status-card .income-level-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.income-status-card .income-level-desc {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+/* 板块标题 */
+.section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 快捷操作区域 */
+.quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.quick-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  background: var(--card-bg);
+  color: var(--text);
+  box-shadow: 0 2px 10px rgba(218,165,32,0.08);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.quick-action-btn:active {
+  transform: scale(0.95);
+}
+
+/* ============================================
+   模块1：梦想清单 - 新增样式
+   ============================================ */
+
+/* 梦想列表 */
+.dreams-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 梦想卡片 */
+.dream-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(218,165,32,0.08);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dream-card .dream-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.dream-card .dream-emoji {
+  font-size: 36px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.dream-card .dream-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.dream-card .dream-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 4px;
+  word-break: break-all;
+}
+
+.dream-card .dream-target {
+  font-size: 13px;
+  color: var(--text-light);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dream-card .dream-target-date {
+  font-size: 11px;
+  color: var(--text-light);
+  background: rgba(218,165,32,0.08);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+/* 梦想进度 */
+.dream-card .dream-progress-section {
+  margin-bottom: 10px;
+}
+
+.dream-card .dream-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.dream-card .dream-progress-text {
+  font-size: 12px;
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.dream-card .dream-progress-pct {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold-dark);
+}
+
+.dream-card .dream-progress-bar {
+  height: 8px;
+  background: rgba(218,165,32,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.dream-card .dream-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s cubic-bezier(0.32, 0.72, 0, 1);
+  background: linear-gradient(90deg, var(--gold-light), var(--gold-dark));
+}
+
+/* 72小时倒计时 */
+.dream-card .dream-timer {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 10px;
+}
+
+.dream-timer.green {
+  background: rgba(76,175,80,0.12);
+  color: #2E7D32;
+}
+
+.dream-timer.red {
+  background: rgba(239,83,80,0.12);
+  color: #C62828;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.dream-timer.yellow {
+  background: rgba(255,183,77,0.15);
+  color: #E65100;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* 梦想操作按钮 */
+.dream-card .dream-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.dream-card .dream-actions .btn {
+  flex: 1;
+  font-size: 12px;
+  padding: 8px 0;
+}
+
+/* 添加梦想按钮 */
+.add-dream-btn {
+  width: 100%;
+  padding: 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  border: 2px dashed rgba(218,165,32,0.3);
+  box-shadow: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gold-dark);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.add-dream-btn:active {
+  background: rgba(255,215,0,0.08);
+  transform: scale(0.97);
+}
+
+/* 梦想表单 */
+.dream-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.dream-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dream-form .form-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Emoji 选择器 */
+.emoji-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.emoji-option {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  background: rgba(255,255,255,0.6);
+  transition: all 0.2s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.emoji-option:hover {
+  background: rgba(255,215,0,0.15);
+}
+
+.emoji-option.selected {
+  border-color: var(--gold);
+  background: rgba(255,215,0,0.2);
+  transform: scale(1.1);
+}
+
+/* 存入弹窗 */
+.deposit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.deposit-form .deposit-preview {
+  text-align: center;
+  font-size: 40px;
+  margin-bottom: 4px;
+}
+
+.deposit-form .deposit-info {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+/* 梦想上限提示 */
+.dream-limit-notice {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 8px;
+}
+
+/* ============================================
+   首页 — 全新布局样式
+   ============================================ */
+
+/* 英雄区金鹅总览 — 升级版 */
+.hero-card {
+  background: linear-gradient(135deg, #FFF9E6 0%, #FFF3C4 50%, #FFEBA8 100%);
+  border-radius: var(--radius);
+  padding: 22px 20px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid rgba(201,147,0,0.12);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-card:active {
+  transform: scale(0.985);
+}
+
+.hero-card .hero-bg-deco {
+  position: absolute;
+  top: -20px;
+  right: -20px;
+  font-size: 100px;
+  opacity: 0.08;
+  pointer-events: none;
+}
+
+.hero-card .hero-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-card .hero-balance {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 8px;
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-card .hero-stats {
+  display: flex;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.hero-card .hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.hero-card .hero-stat-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--gold-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.hero-card .hero-stat-label {
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+/* 快捷入口网格 */
+.quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.quick-grid-item {
+  background: var(--card-bg);
+  border-radius: var(--radius-sm);
+  padding: 16px 8px;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(201,147,0,0.06);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  font-family: inherit;
+}
+
+.quick-grid-item:active {
+  transform: scale(0.95);
+  box-shadow: var(--shadow-md);
+}
+
+.quick-grid-item .qg-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.quick-grid-item .qg-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.quick-grid-item .qg-badge {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--color-danger);
+  border-radius: 8px;
+  padding: 1px 6px;
+  min-width: 16px;
+}
+
+/* 今日进度合并卡片 */
+.today-progress-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(201,147,0,0.06);
+}
+
+.today-progress-card .tp-header {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.today-progress-card .tp-row {
+  margin-bottom: 12px;
+}
+
+.today-progress-card .tp-row:last-child {
+  margin-bottom: 0;
+}
+
+.today-progress-card .tp-row-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.today-progress-card .tp-row-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.today-progress-card .tp-row-value {
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.today-progress-card .tp-bar {
+  height: 6px;
+  background: rgba(201,147,0,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.today-progress-card .tp-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.tp-bar-fill.task { background: linear-gradient(90deg, var(--gold-light), var(--gold)); }
+.tp-bar-fill.dream { background: linear-gradient(90deg, #E8A317, var(--gold-dark)); }
+
+/* 语录卡片 — 点击切换 */
+.quote-card-v2 {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(201,147,0,0.06);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.quote-card-v2:active {
+  transform: scale(0.985);
+}
+
+.quote-card-v2 .quote-mark {
+  font-size: 36px;
+  color: var(--gold);
+  opacity: 0.2;
+  line-height: 1;
+  margin-bottom: -8px;
+}
+
+.quote-card-v2 .quote-text-v2 {
+  font-size: 15px;
+  color: var(--text);
+  line-height: 1.8;
+  font-weight: 500;
+  transition: opacity 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.quote-card-v2 .quote-source-v2 {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 8px;
+  transition: opacity 0.3s ease;
+}
+
+.quote-card-v2 .quote-hint {
+  font-size: 10px;
+  color: var(--text-light);
+  opacity: 0.5;
+  margin-top: 10px;
+  text-align: right;
+}
+
+/* 梦想编辑模态框内的删除按钮 */
+.modal-delete-btn {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px;
+  background: transparent;
+  border: 1.5px solid var(--debt-red);
+  border-radius: var(--radius-sm);
+  color: var(--debt-red);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.modal-delete-btn:active {
+  background: rgba(239,83,80,0.08);
+}
+
+/* ============================================
+   模块2：每日待办 - 附加样式
+   ============================================ */
+.quick-tasks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.quick-task-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border: 1.5px dashed rgba(218,165,32,0.3);
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-light);
+  background: rgba(255,255,255,0.6);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.quick-task-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold-dark);
+  background: rgba(255,215,0,0.08);
+  transform: translateY(-1px);
+}
+
+.quick-task-btn:active {
+  transform: scale(0.95);
+}
+
+.task-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.6);
+  margin-bottom: 6px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.task-item:hover {
+  background: rgba(255,215,0,0.06);
+}
+
+.task-item.done .task-text {
+  text-decoration: line-through;
+  opacity: 0.5;
+  color: var(--text-light);
+}
+
+.task-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(218,165,32,0.3);
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  background: #fff;
+}
+
+.task-checkbox:checked {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+.task-checkbox:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.task-text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.task-delete {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #ccc;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.task-delete:hover {
+  color: var(--debt-red);
+  background: rgba(239,83,80,0.1);
+}
+
+/* ============================================
+   模块2：金鹅储蓄追踪 - 附加样式
+   ============================================ */
+.goose-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 20px;
+  margin-bottom: 12px;
+  background: linear-gradient(160deg, rgba(245,184,0,0.06), rgba(201,147,0,0.02));
+  border-radius: var(--radius);
+  border: 1px solid rgba(201,147,0,0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.goose-display::before {
+  content: '';
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(245,184,0,0.08), transparent 70%);
+  border-radius: 50%;
+}
+
+.goose-display .goose-emoji {
+  font-size: 56px;
+  animation: gooseFloat 3s ease-in-out infinite;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+
+.goose-crown {
+  position: absolute;
+  font-size: 28px;
+  transform: translate(18px, -52px);
+}
+
+.goose-level-tag {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gold-dark);
+  background: rgba(255,215,0,0.15);
+  padding: 4px 14px;
+  border-radius: 20px;
+}
+
+.goose-display .goose-balance {
+  margin-top: 4px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--gold-dark);
+}
+
+.account-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.account-card {
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.account-card:active {
+  transform: scale(0.98);
+}
+
+.acct-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.acct-name {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.acct-ratio {
+  font-size: 12px;
+  opacity: 0.9;
+  background: rgba(255,255,255,0.25);
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+.acct-desc {
+  font-size: 11px;
+  opacity: 0.8;
+  margin-bottom: 8px;
+}
+
+.acct-amount-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.acct-balance {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.acct-monthly {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.acct-progress {
+  width: 100%;
+  height: 5px;
+  background: rgba(255,255,255,0.25);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.acct-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.8);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 账户卡片颜色 */
+.acct-goose { background: linear-gradient(135deg, #FFD700, #F0A500); }
+.acct-dream { background: linear-gradient(135deg, #FF6B9D, #E91E63); }
+.acct-edu { background: linear-gradient(135deg, #4FC3F7, #0288D1); }
+.acct-joy { background: linear-gradient(135deg, #FFB74D, #F57C00); }
+.acct-daily { background: linear-gradient(135deg, #81C784, #388E3C); }
+
+/* 紧凑账户列表 — 白底+色条 */
+.account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(201,147,0,0.06);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.account-row:active {
+  transform: scale(0.985);
+}
+
+.account-row .acct-color-bar {
+  width: 4px;
+  height: 32px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.account-row .acct-row-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+
+.account-row .acct-row-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.account-row .acct-row-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.account-row .acct-row-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.account-row .acct-row-ratio {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-light);
+  background: rgba(201,147,0,0.08);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.account-row .acct-row-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.account-row .acct-row-balance {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.account-row .acct-row-monthly {
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+/* 可折叠详情卡片 */
+.collapsible-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(201,147,0,0.06);
+  overflow: hidden;
+}
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.collapsible-header .ch-icon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.collapsible-header .ch-arrow {
+  font-size: 12px;
+  color: var(--text-light);
+  transition: transform 0.3s ease;
+}
+
+.collapsible-card.open .ch-arrow {
+  transform: rotate(180deg);
+}
+
+.collapsible-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.collapsible-card.open .collapsible-body {
+  max-height: 1200px;
+}
+
+.collapsible-body-inner {
+  padding: 0 18px 18px;
+}
+
+/* 操作栏 */
+.action-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.action-bar .btn {
+  flex: 1;
+}
+
+/* 收入录入按钮 */
+.income-record-btn {
+  margin-bottom: 12px;
+}
+
+/* 收入历史列表 */
+.income-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.income-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.6);
+  transition: background 0.2s;
+}
+
+.income-item:hover {
+  background: rgba(255,215,0,0.06);
+}
+
+.income-item-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.income-amount {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.income-source {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.income-date {
+  font-size: 11px;
+  color: var(--text-light);
+  opacity: 0.7;
+}
+
+.income-delete {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #ccc;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.income-delete:hover {
+  color: var(--debt-red);
+  background: rgba(239,83,80,0.1);
+}
+
+/* 饼图 - 条形图展示 */
+.pie-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pie-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pie-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.pie-label {
+  font-size: 12px;
+  color: var(--text);
+  width: 50px;
+  flex-shrink: 0;
+}
+
+.pie-bar-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(0,0,0,0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pie-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pie-percent {
+  font-size: 11px;
+  color: var(--text-light);
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* 比例设置 */
+.ratio-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ratio-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ratio-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  width: 70px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ratio-input {
+  width: 60px;
+  padding: 6px 10px;
+  border: 2px solid rgba(218,165,32,0.2);
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  font-family: inherit;
+  color: var(--text);
+  background: rgba(255,255,255,0.6);
+  transition: all 0.3s;
+  outline: none;
+}
+
+.ratio-input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(255,215,0,0.1);
+}
+
+.ratio-total {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.6);
+}
+
+.ratio-total.valid {
+  color: var(--phase1);
+}
+
+.ratio-total.invalid {
+  color: var(--debt-red);
+}
+
+/* 收入分配预览 */
+.allocation-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  background: rgba(255,215,0,0.06);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+}
+
+.allocation-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.allocation-amount-input {
+  width: 90px;
+  padding: 4px 8px;
+  border: 1px solid rgba(218,165,32,0.2);
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: right;
+  font-family: inherit;
+  color: var(--text);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.allocation-amount-input:focus {
+  border-color: var(--gold);
+}
+
+/* ============================================
+   模块2：成功日记 - 附加样式
+   ============================================ */
+.diary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.streak-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
+  color: #fff;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.date-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.date-nav-btn {
+  width: 32px;
+  height: 32px;
+  border: 1.5px solid rgba(218,165,32,0.2);
+  border-radius: 50%;
+  background: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  transition: all 0.2s;
+  flex-shrink: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.date-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.date-nav-btn:not(:disabled):hover {
+  border-color: var(--gold);
+  background: rgba(255,215,0,0.08);
+}
+
+.date-nav-display {
+  flex: 1;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.diary-entry-count {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 8px;
+}
+
+.diary-entry {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.6);
+  margin-bottom: 6px;
+  transition: background 0.2s;
+}
+
+.diary-entry-number {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.diary-entry-text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.diary-entry-delete {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  color: #ccc;
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.diary-entry-delete:hover {
+  color: var(--debt-red);
+  background: rgba(239,83,80,0.1);
+}
+
+.diary-add-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.diary-add-input {
+  flex: 1;
+}
+
+.history-cards {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.history-cards::-webkit-scrollbar { display: none; }
+
+.history-card {
+  flex-shrink: 0;
+  width: 80px;
+  padding: 12px 8px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.7);
+  text-align: center;
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: all 0.25s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.history-card:hover {
+  border-color: rgba(218,165,32,0.3);
+  transform: translateY(-2px);
+}
+
+.history-card.selected {
+  border-color: var(--gold);
+  background: rgba(255,215,0,0.08);
+}
+
+.history-card-date {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-bottom: 4px;
+}
+
+.history-card-count {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold-dark);
+}
+
+/* 模态弹窗内表单 */
+.modal-form-group {
+  margin-bottom: 12px;
+}
+
+.modal-form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* ============================================
+   模态弹窗关闭按钮增强
+   ============================================ */
+.modal-close-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(0,0,0,0.05);
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: var(--text-light);
+  transition: all 0.2s;
+  outline: none;
+}
+
+.modal-close-btn:hover {
+  background: rgba(0,0,0,0.1);
+  color: var(--text);
+}
+
+.modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* ============================================
+   模块3：财务自由之路 - 阶梯式三阶段
+   ============================================ */
+.freedom-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.phase-card {
+  position: relative;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 18px 16px 16px;
+  box-shadow: var(--shadow);
+  border: 2px solid transparent;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+
+.phase-card.phase-active {
+  border-color: var(--phase-color);
+  box-shadow: 0 6px 24px rgba(218,165,32,0.18), 0 0 0 1px var(--phase-color);
+}
+
+.phase-card.phase-locked {
+  opacity: 0.55;
+  filter: grayscale(0.6);
+  background: rgba(255,255,255,0.5);
+}
+
+.phase-card.phase-complete {
+  border-color: var(--phase-color);
+  opacity: 0.95;
+}
+
+.phase-step-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: var(--phase-color);
+  border-radius: 0 4px 4px 0;
+}
+
+.phase-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding-left: 8px;
+}
+
+.phase-icon-lg {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.phase-title-area {
+  flex: 1;
+}
+
+.phase-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.phase-subtitle {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.phase-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.phase-body {
+  padding-left: 8px;
+}
+
+.phase-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.phase-info-row .label {
+  color: var(--text-light);
+}
+
+.phase-info-row .value {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.phase-progress-section {
+  margin: 10px 0;
+}
+
+.phase-progress-bar {
+  width: 100%;
+  height: 10px;
+  background: rgba(218,165,32,0.08);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.phase-progress-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--phase-color);
+}
+
+.phase-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.phase-actions .btn {
+  flex: 1;
+  font-size: 12px;
+  padding: 8px 12px;
+}
+
+.phase-hint {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: rgba(255,215,0,0.06);
+  border-radius: 8px;
+  border-left: 3px solid var(--gold);
+}
+
+.phase-locked-hint {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-light);
+  padding: 12px;
+}
+
+.golden-egg-card {
+  background: linear-gradient(135deg, rgba(156,39,176,0.08), rgba(255,215,0,0.08));
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-top: 10px;
+  text-align: center;
+  border: 1.5px dashed rgba(156,39,176,0.2);
+}
+
+.golden-egg-card .egg-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--phase3);
+}
+
+.golden-egg-card .egg-sub {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+/* ============================================
+   模块3：债务管理
+   ============================================ */
+.debt-summary-card {
+  background: linear-gradient(135deg, rgba(239,83,80,0.06), rgba(255,255,255,0.6));
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(239,83,80,0.1);
+}
+
+.debt-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.debt-summary-item {
+  text-align: center;
+}
+
+.debt-summary-item .ds-label {
+  font-size: 11px;
+  color: var(--text-light);
+  margin-bottom: 4px;
+}
+
+.debt-summary-item .ds-value {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.debt-item-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(218,165,32,0.08);
+  transition: all 0.3s;
+}
+
+.debt-item-card.highlight-debt {
+  border: 2px solid var(--debt-red);
+  box-shadow: 0 4px 16px rgba(239,83,80,0.15);
+}
+
+.debt-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.debt-item-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.debt-item-rate-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+  background: rgba(239,83,80,0.12);
+  color: var(--debt-red);
+  font-weight: 600;
+}
+
+.debt-item-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.debt-item-details .detail-label {
+  color: var(--text-light);
+}
+
+.debt-item-details .detail-value {
+  font-weight: 600;
+  text-align: right;
+}
+
+.debt-progress-section {
+  margin: 8px 0;
+}
+
+.debt-countdown {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.debt-countdown .countdown-date {
+  font-weight: 600;
+  color: var(--gold-dark);
+}
+
+.debt-item-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.debt-item-actions .btn {
+  flex: 1;
+  font-size: 12px;
+  padding: 7px 10px;
+}
+
+.principle-5050-card {
+  background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(76,175,80,0.08));
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(255,215,0,0.15);
+}
+
+.principle-5050-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.principle-5050-split {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.principle-5050-half {
+  flex: 1;
+  text-align: center;
+  padding: 10px 8px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.7);
+}
+
+.principle-5050-half .half-label {
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+.principle-5050-half .half-value {
+  font-size: 15px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.principle-5050-half.half-debt .half-value {
+  color: var(--debt-red);
+}
+
+.principle-5050-half.half-save .half-value {
+  color: var(--phase1);
+}
+
+/* ============================================
+   模块3：财务计算器
+   ============================================ */
+.calc-tool-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 12px;
+  border: 1px solid rgba(218,165,32,0.08);
+  overflow: hidden;
+}
+
+.calc-tool-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.calc-tool-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.calc-tool-toggle {
+  font-size: 14px;
+  color: var(--text-light);
+  transition: transform 0.3s;
+}
+
+.calc-tool-card.expanded .calc-tool-toggle {
+  transform: rotate(180deg);
+}
+
+.calc-tool-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.calc-tool-card.expanded .calc-tool-body {
+  max-height: 2000px;
+}
+
+.calc-tool-inner {
+  padding: 0 16px 16px;
+}
+
+.calc-input-group {
+  margin-bottom: 10px;
+}
+
+.calc-input-label {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 4px;
+}
+
+.calc-result-table {
+  width: 100%;
+  margin-top: 12px;
+  border-collapse: collapse;
+}
+
+.calc-result-table th,
+.calc-result-table td {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(218,165,32,0.08);
+}
+
+.calc-result-table th {
+  font-weight: 600;
+  color: var(--text-light);
+  font-size: 12px;
+}
+
+.calc-result-table td.value-cell {
+  font-weight: 600;
+  text-align: right;
+}
+
+.calc-result-highlight {
+  background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(218,165,32,0.04));
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+.calc-result-highlight .rh-label {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.calc-result-highlight .rh-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--gold-dark);
+  margin-top: 4px;
+}
+
+.calc-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  font-size: 13px;
+}
+
+.calc-result-row .cr-label {
+  color: var(--text-light);
+}
+
+.calc-result-row .cr-value {
+  font-weight: 600;
+}
+
+.rule72-card {
+  background: linear-gradient(135deg, rgba(33,150,243,0.06), rgba(255,215,0,0.06));
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  margin-top: 12px;
+}
+
+.rule72-formula {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--phase2);
+  margin: 8px 0;
+}
+
+.rule72-result {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--gold-dark);
+}
+
+.growth-table-wrapper {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 8px;
+  border-radius: 10px;
+  border: 1px solid rgba(218,165,32,0.08);
+}
+
+/* ============================================
+   模块3：收入升级路径
+   ============================================ */
+.income-current-display {
+  text-align: center;
+  padding: 20px 16px;
+  background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,215,0,0.04));
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  border: 1.5px solid rgba(255,215,0,0.2);
+}
+
+.income-current-icon {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.income-current-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin-top: 8px;
+}
+
+.income-current-desc {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-top: 4px;
+}
+
+.level-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border: 2px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.level-card.level-current {
+  border-color: var(--gold);
+  background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,255,255,0.9));
+  box-shadow: 0 6px 20px rgba(218,165,32,0.2);
+}
+
+.level-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.level-medal {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.level-title-area {
+  flex: 1;
+}
+
+.level-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.level-subtitle {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.level-current-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: var(--gold);
+  color: #fff;
+  white-space: nowrap;
+}
+
+.level-desc {
+  font-size: 13px;
+  color: var(--text);
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+
+.level-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.level-tag {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  background: rgba(218,165,32,0.08);
+  color: var(--text-light);
+  font-weight: 500;
+}
+
+.level-advice {
+  font-size: 12px;
+  color: var(--text-light);
+  padding: 8px 10px;
+  background: rgba(255,215,0,0.06);
+  border-radius: 8px;
+  border-left: 3px solid var(--level-color, var(--gold));
+  margin-top: 8px;
+}
+
+.level-unlock-hint {
+  font-size: 12px;
+  color: var(--text-light);
+  text-align: center;
+  padding: 6px;
+  margin-top: 8px;
+}
+
+/* ============================================
+   模块3：四大支柱（详细页面，类名使用 pillar-detail-*）
+   ============================================ */
+.pillars-overview {
+  text-align: center;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(255,215,0,0.08), rgba(255,255,255,0.6));
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+
+.pillars-overview-score {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--gold-dark);
+}
+
+.pillars-overview-label {
+  font-size: 13px;
+  color: var(--text-light);
+}
+
+.pillars-overview-bar {
+  width: 100%;
+  height: 10px;
+  background: rgba(218,165,32,0.08);
+  border-radius: 5px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.pillars-overview-fill {
+  height: 100%;
+  border-radius: 5px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(90deg, var(--gold), var(--gold-dark));
+}
+
+.pillar-detail-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(218,165,32,0.08);
+  transition: all 0.3s;
+}
+
+.pillar-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pillar-detail-icon {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.pillar-detail-title-area {
+  flex: 1;
+}
+
+.pillar-detail-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.pillar-detail-subtitle {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.pillar-score-badge {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold-dark);
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: rgba(255,215,0,0.1);
+}
+
+.pillar-slider-container {
+  margin: 12px 0;
+}
+
+.pillar-slider-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+.pillar-slider {
+  width: 100%;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: rgba(218,165,32,0.1);
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.pillar-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(218,165,32,0.3);
+  border: 2px solid #fff;
+}
+
+.pillar-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  cursor: pointer;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(218,165,32,0.3);
+}
+
+.pillar-stars {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  justify-content: center;
+}
+
+.pillar-star {
+  font-size: 20px;
+  color: rgba(218,165,32,0.2);
+  transition: all 0.2s;
+}
+
+.pillar-star.filled {
+  color: var(--gold);
+  transform: scale(1.1);
+}
+
+.pillar-guide-question {
+  font-size: 13px;
+  color: var(--text);
+  padding: 10px 12px;
+  background: rgba(255,215,0,0.06);
+  border-radius: 10px;
+  border-left: 3px solid var(--gold);
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+.pillar-reflection {
+  margin-top: 10px;
+}
+
+.pillar-reflection-toggle {
+  font-size: 12px;
+  color: var(--gold-dark);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pillar-reflection-area {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s;
+}
+
+.pillar-reflection-area.expanded {
+  max-height: 300px;
+}
+
+.pillar-reflection-area textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  border-radius: 10px;
+  border: 2px solid rgba(218,165,32,0.15);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: rgba(255,255,255,0.6);
+  resize: vertical;
+  margin-top: 8px;
+  outline: none;
+}
+
+.pillar-reflection-area textarea:focus {
+  border-color: var(--gold);
+}
+
+.pillar-link-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.pillar-link-btn {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(255,215,0,0.08);
+  color: var(--gold-dark);
+  border: 1px solid rgba(255,215,0,0.2);
+  cursor: pointer;
+  font-family: inherit;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s;
+}
+
+.pillar-link-btn:active {
+  transform: scale(0.95);
+}
+
+/* ============================================
+   模块3：模态弹窗表单
+   ============================================ */
+.modal-field {
+  margin-bottom: 14px;
+}
+
+.modal-field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.modal-field label .hint {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-light);
+  margin-left: 4px;
+}
+
+/* 设置按钮 */
+.settings-fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: var(--radius-sm);
+  background: rgba(255,215,0,0.1);
+  border: 1.5px dashed var(--gold);
+  color: var(--gold-dark);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  margin-bottom: 14px;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s;
+}
+
+.settings-fab:active {
+  transform: scale(0.97);
+}
+
+/* 通用 section 标题行 */
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+/* 收入路径台阶视觉效果 */
+.level-steps-visual {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 0 20px;
+}
+
+.level-step-visual {
+  flex: 1;
+  border-radius: 8px 8px 0 0;
+  text-align: center;
+  padding: 6px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.level-step-visual.step-1 {
+  height: 36px;
+  background: var(--level1);
+}
+
+.level-step-visual.step-2 {
+  height: 52px;
+  background: var(--level2);
+}
+
+.level-step-visual.step-3 {
+  height: 68px;
+  background: var(--level3);
+}
+
+.level-step-visual.step-current {
+  box-shadow: 0 -3px 12px rgba(255,215,0,0.4);
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ===== 顶部问候区域 ===== -->
+  <div id="header">
+    <div class="greeting-row">
+      <div>
+        <div class="greeting-text" id="greeting-text">早上好</div>
+        <div class="greeting-sub" id="greeting-sub">今天是美好的一天</div>
+        <div class="greeting-date" id="greeting-date"></div>
+      </div>
+      <div class="greeting-emoji" id="greeting-emoji">💰</div>
+    </div>
+  </div>
+
+  <!-- ===== 主内容容器 ===== -->
+  <div id="main-content">
+    <!-- 首页 -->
+    <div class="page active" id="page-home"></div>
+
+    <!-- 梦想 -->
+    <div class="page" id="page-dreams"></div>
+
+    <!-- 待办 -->
+    <div class="page" id="page-tasks"></div>
+
+    <!-- 金鹅 -->
+    <div class="page" id="page-goose"></div>
+
+    <!-- 我的（含子页面导航） -->
+    <div class="page" id="page-more">
+      <div class="sub-nav" id="sub-nav">
+        <button class="sub-nav-item active" data-sub="diary" onclick="navigate('more', 'diary')">📖 成功日记</button>
+        <button class="sub-nav-item" data-sub="freedom" onclick="navigate('more', 'freedom')">🗺️ 自由之路</button>
+        <button class="sub-nav-item" data-sub="debt" onclick="navigate('more', 'debt')">💳 债务管理</button>
+        <button class="sub-nav-item" data-sub="calculator" onclick="navigate('more', 'calculator')">🧮 计算器</button>
+        <button class="sub-nav-item" data-sub="income-path" onclick="navigate('more', 'income-path')">📈 收入升级</button>
+        <button class="sub-nav-item" data-sub="pillars" onclick="navigate('more', 'pillars')">🏛️ 四大支柱</button>
+      </div>
+      <div id="sub-page-container"></div>
+    </div>
+  </div>
+
+  <!-- ===== 底部导航栏 ===== -->
+  <nav id="bottom-nav">
+    <button class="nav-item active" data-page="home" onclick="navigate('home')">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">首页</span>
+    </button>
+    <button class="nav-item" data-page="dreams" onclick="navigate('dreams')">
+      <span class="nav-icon">🌟</span>
+      <span class="nav-label">梦想</span>
+    </button>
+    <button class="nav-item" data-page="tasks" onclick="navigate('tasks')">
+      <span class="nav-icon">✅</span>
+      <span class="nav-label">待办</span>
+    </button>
+    <button class="nav-item" data-page="goose" onclick="navigate('goose')">
+      <span class="nav-icon">🦆</span>
+      <span class="nav-label">金鹅</span>
+    </button>
+    <button class="nav-item more-tab" data-page="more" onclick="navigate('more')">
+      <span class="nav-icon">👤</span>
+      <span class="nav-label">我的</span>
+    </button>
+  </nav>
+
+</div>
+
+<!-- ===== Toast 容器 ===== -->
+<div id="toast-container"></div>
+
+<!-- ===== 撒花/金币容器 ===== -->
+<div id="confetti-container"></div>
+
+<script>
+/* ============================================
+   钱钱日记 - 完整应用
+   ============================================ */
+
+'use strict';
+
+// ============================================
+// 数据模型
+// ============================================
+const STORAGE_KEY = 'qqrj_data';
+
+const DEFAULT_DATA = {
+  dreams: [],
+  tasks: [],
+  incomes: [],
+  diaries: {},
+  streak: 0,
+  lastDiaryDate: null,
+
+  freedom: {
+    monthlyEssential: 0,
+    emergencyFund: 0,
+    investmentPrincipal: 0,
+    passiveIncome: 0,
+    idealMonthly: 0,
+    phase1Complete: false,
+    phase2Complete: false,
+  },
+
+  accounts: {
+    goose: { balance: 0, monthlyIn: 0, ratio: 50 },
+    dream: { balance: 0, monthlyIn: 0, ratio: 20 },
+    edu: { balance: 0, monthlyIn: 0, ratio: 10 },
+    joy: { balance: 0, monthlyIn: 0, ratio: 10 },
+    daily: { balance: 0, monthlyIn: 0, ratio: 10 },
+  },
+
+  debts: [],
+  extraCash: 0,
+  incomeLevel: 1,
+  pillars: { dream: 0, goal: 0, values: 0, strategy: 0 },
+};
+
+// ============================================
+// 数据操作
+// ============================================
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    const data = JSON.parse(raw);
+    return deepMerge(DEFAULT_DATA, data);
+  } catch (e) {
+    console.error('数据加载失败，使用默认数据:', e);
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+}
+
+function saveData(data) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch (e) {
+    console.error('数据保存失败:', e);
+    showToast('数据保存失败，请检查存储空间', '⚠️');
+  }
+}
+
+function deepMerge(defaults, data) {
+  const result = JSON.parse(JSON.stringify(defaults));
+  for (const key in data) {
+    if (data.hasOwnProperty(key)) {
+      if (typeof data[key] === 'object' && data[key] !== null && !Array.isArray(data[key])) {
+        result[key] = deepMerge(result[key] || {}, data[key]);
+      } else {
+        result[key] = data[key];
+      }
+    }
+  }
+  return result;
+}
+
+// ============================================
+// 应用状态
+// ============================================
+let currentPage = 'home';
+let subPage = 'diary';
+
+// ============================================
+// 路由系统
+// ============================================
+
+function navigate(page, sub) {
+  if (page === 'more' && sub) {
+    currentPage = 'more';
+    subPage = sub;
+  } else {
+    currentPage = page;
+    if (page !== 'more') {
+      subPage = 'diary';
+    }
+  }
+
+  const allPages = document.querySelectorAll('.page');
+  allPages.forEach(p => p.classList.remove('active'));
+
+  const targetPage = document.getElementById('page-' + page);
+  if (targetPage) {
+    targetPage.classList.add('active');
+  }
+
+  const navItems = document.querySelectorAll('#bottom-nav .nav-item');
+  navItems.forEach(item => {
+    item.classList.toggle('active', item.dataset.page === page);
+  });
+
+  if (page === 'more') {
+    const subNavItems = document.querySelectorAll('#sub-nav .sub-nav-item');
+    subNavItems.forEach(item => {
+      item.classList.toggle('active', item.dataset.sub === subPage);
+    });
+  }
+
+  renderPage();
+
+  document.getElementById('main-content').scrollTop = 0;
+
+  updateGreeting();
+}
+
+function renderPage() {
+  const pageRenderers = {
+    home: renderHome,
+    dreams: renderDreams,
+    tasks: renderTasks,
+    goose: renderGoose,
+    more: renderMoreSubPage,
+  };
+
+  const renderer = pageRenderers[currentPage];
+  if (renderer) {
+    renderer();
+  }
+}
+
+function renderMoreSubPage() {
+  const container = document.getElementById('sub-page-container');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const subRenderers = {
+    diary: function(c) { renderDiaryInto(c); },
+    freedom: function(c) { renderFreedomInto(c); },
+    debt: renderDebt,
+    calculator: renderCalculator,
+    'income-path': renderIncomePath,
+    pillars: renderPillars,
+  };
+
+  const renderer = subRenderers[subPage];
+  if (renderer) {
+    renderer(container);
+  }
+}
+
+// ============================================
+// 工具函数
+// ============================================
+
+function showToast(msg, icon) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = icon ? '<span>' + icon + '</span> ' + msg : msg;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    if (toast.parentNode) {
+      toast.remove();
+    }
+  }, 2900);
+}
+
+function confetti(options) {
+  const opts = Object.assign({
+    count: 50,
+    type: 'confetti',
+    duration: 3000,
+  }, options || {});
+
+  const container = document.getElementById('confetti-container');
+  const colors = ['#FFD700', '#DAA520', '#FF6B9D', '#4FC3F7', '#81C784', '#FFB74D', '#9C27B0', '#FF5722'];
+
+  for (let i = 0; i < opts.count; i++) {
+    const piece = document.createElement('div');
+
+    if (opts.type === 'coin') {
+      piece.className = 'coin';
+      piece.textContent = '🪙';
+      piece.style.left = Math.random() * 100 + '%';
+      piece.style.animationDelay = Math.random() * 0.5 + 's';
+      piece.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+    } else {
+      piece.className = 'confetti-piece';
+      piece.style.left = Math.random() * 100 + '%';
+      piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      piece.style.width = (6 + Math.random() * 10) + 'px';
+      piece.style.height = (6 + Math.random() * 10) + 'px';
+      piece.style.setProperty('--fall-duration', (1.5 + Math.random() * 2) + 's');
+      piece.style.setProperty('--shake-duration', (0.5 + Math.random() * 0.8) + 's');
+      piece.style.animationDelay = Math.random() * 0.3 + 's';
+    }
+
+    container.appendChild(piece);
+  }
+
+  setTimeout(() => {
+    container.innerHTML = '';
+  }, opts.duration + 500);
+}
+
+function formatMoney(n) {
+  return '¥' + Number(n).toLocaleString('zh-CN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function formatPercent(n) {
+  return Number(n).toFixed(1) + '%';
+}
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 6) return { text: '夜深了 🌙', emoji: '🌙', sub: '早点休息，明天继续加油' };
+  if (hour < 9) return { text: '早上好 ☀️', emoji: '☀️', sub: '新的一天，新的开始' };
+  if (hour < 12) return { text: '上午好 🌤️', emoji: '🌤️', sub: '元气满满，高效工作' };
+  if (hour < 14) return { text: '中午好 🌞', emoji: '🌞', sub: '记得好好吃饭哦' };
+  if (hour < 17) return { text: '下午好 🌈', emoji: '🌈', sub: '坚持就是胜利' };
+  if (hour < 19) return { text: '傍晚好 🌅', emoji: '🌅', sub: '一天辛苦了，放松一下吧' };
+  return { text: '晚上好 🌙', emoji: '✨', sub: '回顾今天，计划明天' };
+}
+
+function updateGreeting() {
+  const greeting = getGreeting();
+  document.getElementById('greeting-text').textContent = greeting.text;
+  document.getElementById('greeting-emoji').textContent = greeting.emoji;
+  document.getElementById('greeting-sub').textContent = greeting.sub;
+  // 日期显示
+  var dateEl = document.getElementById('greeting-date');
+  if (dateEl) {
+    var d = new Date();
+    var weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+    dateEl.textContent = (d.getMonth() + 1) + '月' + d.getDate() + '日 周' + weekdays[d.getDay()];
+  }
+}
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
+}
+
+function getTodayStr() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  const month = d.getMonth() + 1;
+  const day = d.getDate();
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
+  const weekday = weekdays[d.getDay()];
+  return month + '月' + day + '日 周' + weekday;
+}
+
+function confirmDialog(msg) {
+  return window.confirm(msg);
+}
+
+/**
+ * HTML 转义，防止 XSS
+ */
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * 通用模态弹窗 - 显示
+ */
+function showModal(html) {
+  closeModal();
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'dynamic-modal';
+  overlay.onclick = function(e) {
+    if (e.target === overlay) closeModal();
+  };
+  overlay.innerHTML = '<div class="modal-sheet" onclick="event.stopPropagation();">' +
+    '<button class="modal-close-btn" onclick="closeModal()">✕</button>' +
+    '<div class="modal-handle"></div>' +
+    html + '</div>';
+  document.body.appendChild(overlay);
+}
+
+/**
+ * 通用模态弹窗 - 关闭
+ */
+function closeModal() {
+  const modal = document.getElementById('dynamic-modal');
+  if (modal) modal.remove();
+  // 也关闭其他旧式弹窗
+  var dreamModal = document.getElementById('dream-modal');
+  if (dreamModal) dreamModal.remove();
+  var incomeModal = document.getElementById('income-modal');
+  if (incomeModal) incomeModal.remove();
+  var ratioModal = document.getElementById('ratio-modal');
+  if (ratioModal) ratioModal.remove();
+}
+
+// ESC键关闭所有弹窗
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeModal();
+  }
+});
+
+// ============================================
+// 模块1：首页仪表盘
+// ============================================
+
+const QUOTES = [
+  { text: '成功日记：每天记录5件做得好的事', source: '——《小狗钱钱》' },
+  { text: '永远不要杀死你的鹅——保护好本金', source: '——《小狗钱钱》' },
+  { text: '72小时法则：决定后立刻行动', source: '——《小狗钱钱》' },
+  { text: '把收入的一半喂给你的鹅', source: '——《小狗钱钱》' },
+  { text: '量入为出，控制不必要的消费', source: '——《小狗钱钱》' },
+  { text: '关注你能做什么，而不是不能做什么', source: '——《小狗钱钱》' },
+  { text: '写下来，你的梦想才会变得具体', source: '——《小狗钱钱》' },
+  { text: '自信决定你的行动力', source: '——《小狗钱钱》' },
+  { text: '财务自由的本质是被动收入大于支出', source: '——《财务自由之路》' },
+  { text: '先付给自己——收入到账第一笔转储蓄', source: '——《财务自由之路》' },
+  { text: '你不需要很多钱就能开始，但你需要开始才能拥有很多', source: '——《财务自由之路》' },
+  { text: '真正的富有不是赚多少钱，而是留多少钱', source: '——《财务自由之路》' },
+  { text: '鹅代表你的本金，金蛋代表利息，永远不要杀死你的鹅', source: '——《财务自由之路》' },
+  { text: '最好的投资是投资自己', source: '——《财务自由之路》' },
+  { text: '7年之内一定要达到财务安全', source: '——《财务自由之路》' },
+  { text: '把精力放在收入上，而不是节省上', source: '——《财务自由之路》' },
+  { text: '每个人都能成为富翁，但不是每个人都能成为学者', source: '——《财务自由之路》' },
+  { text: '自律给我自由，财务自律给我财务自由', source: '——《财务自由之路》' },
+];
+
+let quoteTimer = null;
+let currentQuoteIndex = 0;
+
+function renderHome() {
+  const el = document.getElementById('page-home');
+  const data = loadData();
+
+  const { accounts, dreams, tasks } = data;
+
+  const totalBalance = accounts.goose.balance + accounts.dream.balance +
+    accounts.edu.balance + accounts.joy.balance + accounts.daily.balance;
+
+  const totalMonthlyIn = accounts.goose.monthlyIn + accounts.dream.monthlyIn +
+    accounts.edu.monthlyIn + accounts.joy.monthlyIn + accounts.daily.monthlyIn;
+
+  let dreamAvgProgress = 0;
+  if (dreams.length > 0) {
+    const progresses = dreams.map(d => d.target > 0 ? Math.min(100, (d.saved / d.target) * 100) : 0);
+    dreamAvgProgress = progresses.reduce((a, b) => a + b, 0) / progresses.length;
+  }
+
+  const todayTasks = tasks || [];
+  const doneTasks = todayTasks.filter(t => t.done).length;
+  const totalTasks = todayTasks.length;
+  const taskPercent = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+  const remainingTasks = totalTasks - doneTasks;
+
+  // 获取金鹅等级（内联，避免const提升问题）
+  var gooseBalance = accounts.goose.balance;
+  var gooseLevels = [
+    { min: 0, max: 999, label: '蛋' },
+    { min: 1000, max: 4999, label: '小鸡' },
+    { min: 5000, max: 9999, label: '小鹅' },
+    { min: 10000, max: 49999, label: '大鹅' },
+    { min: 50000, max: Infinity, label: '金鹅' },
+  ];
+  var gooseLevel = gooseLevels[0];
+  for (var i = gooseLevels.length - 1; i >= 0; i--) {
+    if (gooseBalance >= gooseLevels[i].min) { gooseLevel = gooseLevels[i]; break; }
+  }
+
+  let html = '';
+
+  // === 区域1：英雄区 — 金鹅总览 ===
+  html += '<div class="hero-card" onclick="navigate(\'goose\')">' +
+    '<div class="hero-bg-deco">🦆</div>' +
+    '<div class="hero-label">🦆 金鹅总资产 · ' + gooseLevel.label + '阶段</div>' +
+    '<div class="hero-balance">' + formatMoney(totalBalance) + '</div>' +
+    '<div class="hero-stats">' +
+    '<div class="hero-stat"><span class="hero-stat-value">+' + formatMoney(totalMonthlyIn) + '</span><span class="hero-stat-label">本月存入</span></div>' +
+    '<div class="hero-stat"><span class="hero-stat-value">' + data.streak + '天</span><span class="hero-stat-label">连续日记</span></div>' +
+    '<div class="hero-stat"><span class="hero-stat-value">Lv' + (data.incomeLevel || 1) + '</span><span class="hero-stat-label">收入阶段</span></div>' +
+    '</div>' +
+    '</div>';
+
+  // === 区域2：快捷入口 — 2x3网格 ===
+  html += '<div class="quick-grid">';
+  var quickItems = [
+    { icon: '🌟', label: '梦想', badge: dreams.length > 0 ? dreams.length : '', onClick: "navigate('dreams')" },
+    { icon: '✅', label: '待办', badge: remainingTasks > 0 ? remainingTasks : '', onClick: "navigate('tasks')" },
+    { icon: '📖', label: '日记', badge: '', onClick: "navigate('more','diary')" },
+    { icon: '🗺️', label: '自由', badge: '', onClick: "navigate('more','freedom')" },
+    { icon: '💳', label: '债务', badge: (data.debts && data.debts.length > 0) ? data.debts.length : '', onClick: "navigate('more','debt')" },
+    { icon: '🧮', label: '计算器', badge: '', onClick: "navigate('more','calculator')" },
+  ];
+  quickItems.forEach(function(item) {
+    html += '<button class="quick-grid-item" style="position:relative;" onclick="' + item.onClick + '">' +
+      (item.badge ? '<span class="qg-badge">' + item.badge + '</span>' : '') +
+      '<span class="qg-icon">' + item.icon + '</span>' +
+      '<span class="qg-label">' + item.label + '</span>' +
+      '</button>';
+  });
+  html += '</div>';
+
+  // === 区域3：今日进度合并卡片 ===
+  html += '<div class="today-progress-card">';
+  html += '<div class="tp-header">📊 今日进度</div>';
+
+  // 待办进度
+  html += '<div class="tp-row" onclick="navigate(\'tasks\')" style="cursor:pointer;">';
+  html += '<div class="tp-row-header"><span class="tp-row-label">✅ 今日待办</span><span class="tp-row-value">' + doneTasks + '/' + totalTasks + '</span></div>';
+  html += '<div class="tp-bar"><div class="tp-bar-fill task" style="width:' + taskPercent + '%;"></div></div>';
+  html += '</div>';
+
+  // 梦想进度
+  if (dreams.length > 0) {
+    html += '<div class="tp-row" onclick="navigate(\'dreams\')" style="cursor:pointer;">';
+    html += '<div class="tp-row-header"><span class="tp-row-label">🌟 梦想进度</span><span class="tp-row-value">' + formatPercent(dreamAvgProgress) + '</span></div>';
+    html += '<div class="tp-bar"><div class="tp-bar-fill dream" style="width:' + Math.min(100, dreamAvgProgress) + '%;"></div></div>';
+    html += '</div>';
+  }
+  html += '</div>';
+
+  // === 区域4：理财语录 — 点击切换 ===
+  html += '<div class="quote-card-v2" id="quote-card-v2" onclick="nextQuote()">' +
+    '<div class="quote-mark">"</div>' +
+    '<div class="quote-text-v2" id="quote-text">' + QUOTES[0].text + '</div>' +
+    '<div class="quote-source-v2" id="quote-source">' + QUOTES[0].source + '</div>' +
+    '<div class="quote-hint">点击换一条 →</div>' +
+    '</div>';
+
+  el.innerHTML = html;
+
+  // 启动自动轮播（每15秒）
+  startQuoteCarousel();
+}
+
+function nextQuote() {
+  currentQuoteIndex = (currentQuoteIndex + 1) % QUOTES.length;
+  updateQuoteDisplay();
+}
+
+function startQuoteCarousel() {
+  stopQuoteCarousel();
+  quoteTimer = setInterval(function() {
+    currentQuoteIndex = (currentQuoteIndex + 1) % QUOTES.length;
+    updateQuoteDisplay();
+  }, 15000);
+}
+
+function stopQuoteCarousel() {
+  if (quoteTimer) {
+    clearInterval(quoteTimer);
+    quoteTimer = null;
+  }
+}
+
+function updateQuoteDisplay() {
+  const textEl = document.getElementById('quote-text');
+  const sourceEl = document.getElementById('quote-source');
+  const dotsEl = document.getElementById('quote-dots');
+
+  if (!textEl || !sourceEl) return;
+
+  const quote = QUOTES[currentQuoteIndex];
+
+  textEl.style.opacity = '0';
+  sourceEl.style.opacity = '0';
+
+  setTimeout(function() {
+    textEl.textContent = quote.text;
+    sourceEl.textContent = quote.source;
+    textEl.style.opacity = '1';
+    sourceEl.style.opacity = '1';
+  }, 200);
+
+  if (dotsEl) {
+    const dots = dotsEl.querySelectorAll('.quote-dot');
+    dots.forEach(function(dot, i) {
+      dot.classList.toggle('active', i === currentQuoteIndex);
+    });
+  }
+}
+
+// ============================================
+// 模块1：梦想清单
+// ============================================
+
+function renderDreams() {
+  const el = document.getElementById('page-dreams');
+  const data = loadData();
+  const dreams = data.dreams || [];
+
+  let html = '';
+
+  html += '<div class="dreams-list">';
+
+  dreams.forEach(function(dream) {
+    const progress = dream.target > 0 ? Math.min(100, (dream.saved / dream.target) * 100) : 0;
+
+    const createdTime = dream.createdAt ? new Date(dream.createdAt).getTime() : Date.now();
+    const now = Date.now();
+    const elapsedHours = (now - createdTime) / (1000 * 60 * 60);
+    const hoursRemaining = 72 - elapsedHours;
+
+    let timerClass = 'green';
+    let timerText = '';
+    let timerIcon = '';
+
+    if (hoursRemaining <= 0) {
+      if (dream.saved > 0) {
+        timerClass = 'green';
+        timerText = '已行动 ✅';
+        timerIcon = '✅';
+      } else {
+        timerClass = 'red';
+        timerText = '72小时已过！立即行动！';
+        timerIcon = '⚠️';
+      }
+    } else if (hoursRemaining <= 12) {
+      timerClass = 'yellow';
+      timerText = '剩余 ' + Math.ceil(hoursRemaining) + ' 小时';
+      timerIcon = '⏰';
+    } else {
+      timerClass = 'green';
+      timerText = '剩余 ' + Math.ceil(hoursRemaining) + ' 小时';
+      timerIcon = '⏳';
+    }
+
+    let targetDateStr = '';
+    if (dream.date) {
+      targetDateStr = formatDate(dream.date);
+    }
+
+    html += '<div class="dream-card" id="dream-' + dream.id + '">' +
+      '<div class="dream-top">' +
+      '<div class="dream-emoji">' + (dream.emoji || '🌟') + '</div>' +
+      '<div class="dream-info">' +
+      '<div class="dream-name">' + escapeHtml(dream.name) + '</div>' +
+      '<div class="dream-target">' +
+      '<span>目标 ' + formatMoney(dream.target) + '</span>' +
+      '<span>已存 ' + formatMoney(dream.saved) + '</span>' +
+      (targetDateStr ? '<span class="dream-target-date">📅 ' + targetDateStr + '</span>' : '') +
+      '</div>' +
+      '</div>' +
+      '</div>' +
+      '<div class="dream-progress-section">' +
+      '<div class="dream-progress-header">' +
+      '<span class="dream-progress-text">梦想进度</span>' +
+      '<span class="dream-progress-pct">' + formatPercent(progress) + '</span>' +
+      '</div>' +
+      '<div class="dream-progress-bar"><div class="dream-progress-fill" style="width:' + progress + '%;"></div></div>' +
+      '</div>' +
+      '<div class="dream-timer ' + timerClass + '"><span>' + timerIcon + '</span> ' + timerText + '</div>' +
+      '<div class="dream-actions">' +
+      '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();depositToDream(\'' + dream.id + '\')">💰 存入</button>' +
+      '<button class="btn btn-outline btn-sm" onclick="event.stopPropagation();editDream(\'' + dream.id + '\')">✏️ 编辑</button>' +
+      '<button class="btn btn-outline btn-sm" style="color:var(--debt-red);border-color:var(--debt-red);" onclick="event.stopPropagation();deleteDream(\'' + dream.id + '\')">🗑️</button>' +
+      '</div>' +
+      '</div>';
+  });
+
+  html += '</div>';
+
+  if (dreams.length === 0) {
+    html += '<div class="card" style="text-align:center;padding:32px 20px;">';
+    html += '<div style="font-size:56px;margin-bottom:12px;animation:gooseFloat 3s ease-in-out infinite;">🌟</div>';
+    html += '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">写下你的第一个梦想</div>';
+    html += '<div style="font-size:13px;color:var(--text-light);margin-bottom:16px;line-height:1.6;">《小狗钱钱》说：写下来的梦想才会变得具体。<br>设定3个最重要的财务梦想，开始你的理财之旅吧！</div>';
+    html += '<button class="btn btn-primary" onclick="showAddDreamModal()">✨ 添加梦想</button>';
+    html += '</div>';
+  } else if (dreams.length < 3) {
+    html += '<div class="mt-12"><button class="add-dream-btn" onclick="showAddDreamModal()"><span style="font-size:20px;">+</span> 添加梦想</button></div>';
+  } else {
+    html += '<div class="dream-limit-notice">最多支持 3 个梦想，完成或删除后再添加吧 ✨</div>';
+  }
+
+  el.innerHTML = html;
+}
+
+function showAddDreamModal() {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'dream-modal';
+
+  var emojis = ['🏠','🚗','✈️','🎓','💍','🏖️','📚','💻','🎸','🎨'];
+  var emojiHtml = emojis.map(function(e) {
+    return '<span class="emoji-option" data-emoji="' + e + '">' + e + '</span>';
+  }).join('');
+
+  overlay.innerHTML =
+    '<div class="modal-sheet" onclick="event.stopPropagation();">' +
+    '<div class="modal-handle"></div>' +
+    '<h3 style="font-size:18px;font-weight:700;margin-bottom:16px;color:var(--text);">🌟 添加梦想</h3>' +
+    '<div class="dream-form" id="add-dream-form">' +
+    '<div class="form-group"><label class="form-label">梦想名称</label><input type="text" class="input" id="dream-name-input" placeholder="例如：去日本旅行" maxlength="30"></div>' +
+    '<div class="form-group"><label class="form-label">目标金额</label><input type="number" class="input" id="dream-target-input" placeholder="0.00" min="0" step="0.01"></div>' +
+    '<div class="form-group"><label class="form-label">目标日期</label><input type="date" class="input" id="dream-date-input"></div>' +
+    '<div class="form-group"><label class="form-label">选择图标</label><div class="emoji-picker" id="emoji-picker">' + emojiHtml + '</div><input type="hidden" id="dream-emoji-input" value="🌟"></div>' +
+    '<div class="flex gap-8 mt-8"><button class="btn btn-outline btn-block" onclick="closeDreamModal()">取消</button><button class="btn btn-primary btn-block" onclick="submitAddDream()">✨ 创建梦想</button></div>' +
+    '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) {
+      closeDreamModal();
+    }
+  });
+
+  setTimeout(function() {
+    var picker = document.getElementById('emoji-picker');
+    if (picker) {
+      var options = picker.querySelectorAll('.emoji-option');
+      options.forEach(function(opt) {
+        opt.addEventListener('click', function() {
+          options.forEach(function(o) { o.classList.remove('selected'); });
+          opt.classList.add('selected');
+          document.getElementById('dream-emoji-input').value = opt.dataset.emoji;
+        });
+      });
+    }
+  }, 50);
+}
+
+function closeDreamModal() {
+  var overlay = document.getElementById('dream-modal');
+  if (overlay) {
+    overlay.remove();
+  }
+}
+
+function submitAddDream() {
+  var nameEl = document.getElementById('dream-name-input');
+  var targetEl = document.getElementById('dream-target-input');
+  var dateEl = document.getElementById('dream-date-input');
+  var emojiEl = document.getElementById('dream-emoji-input');
+
+  var name = (nameEl ? nameEl.value.trim() : '');
+  var target = parseFloat(targetEl ? targetEl.value : 0);
+  var date = dateEl ? dateEl.value : '';
+  var emoji = emojiEl ? emojiEl.value : '🌟';
+
+  if (!name) {
+    showToast('请输入梦想名称', '⚠️');
+    return;
+  }
+  if (!target || target <= 0) {
+    showToast('请输入有效的目标金额', '⚠️');
+    return;
+  }
+
+  var data = loadData();
+  if (data.dreams.length >= 3) {
+    showToast('最多只能有3个梦想哦', '⚠️');
+    return;
+  }
+
+  var newDream = {
+    id: generateId(),
+    name: name,
+    target: target,
+    saved: 0,
+    date: date || null,
+    emoji: emoji,
+    createdAt: new Date().toISOString(),
+  };
+
+  data.dreams.push(newDream);
+  saveData(data);
+
+  closeDreamModal();
+  showToast('梦想已创建！72小时内开始行动吧 ⏰', '🌟');
+  renderDreams();
+}
+
+function editDream(dreamId) {
+  var data = loadData();
+  var dream = data.dreams.find(function(d) { return d.id === dreamId; });
+  if (!dream) return;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'dream-modal';
+
+  var emojis = ['🏠','🚗','✈️','🎓','💍','🏖️','📚','💻','🎸','🎨'];
+  var emojiHtml = emojis.map(function(e) {
+    return '<span class="emoji-option' + (e === dream.emoji ? ' selected' : '') + '" data-emoji="' + e + '">' + e + '</span>';
+  }).join('');
+
+  overlay.innerHTML =
+    '<div class="modal-sheet" onclick="event.stopPropagation();">' +
+    '<div class="modal-handle"></div>' +
+    '<h3 style="font-size:18px;font-weight:700;margin-bottom:16px;color:var(--text);">✏️ 编辑梦想</h3>' +
+    '<div class="dream-form">' +
+    '<div class="form-group"><label class="form-label">梦想名称</label><input type="text" class="input" id="dream-name-input" value="' + escapeHtml(dream.name) + '" maxlength="30"></div>' +
+    '<div class="form-group"><label class="form-label">目标金额</label><input type="number" class="input" id="dream-target-input" value="' + dream.target + '" min="0" step="0.01"></div>' +
+    '<div class="form-group"><label class="form-label">目标日期</label><input type="date" class="input" id="dream-date-input" value="' + (dream.date || '') + '"></div>' +
+    '<div class="form-group"><label class="form-label">选择图标</label><div class="emoji-picker" id="emoji-picker">' + emojiHtml + '</div><input type="hidden" id="dream-emoji-input" value="' + (dream.emoji || '🌟') + '"></div>' +
+    '<div class="flex gap-8 mt-8"><button class="btn btn-outline btn-block" onclick="closeDreamModal()">取消</button><button class="btn btn-primary btn-block" onclick="submitEditDream(\'' + dreamId + '\')">💾 保存修改</button></div>' +
+    '<button class="modal-delete-btn" onclick="closeDreamModal();deleteDream(\'' + dreamId + '\')">🗑️ 删除这个梦想</button>' +
+    '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) {
+      closeDreamModal();
+    }
+  });
+
+  setTimeout(function() {
+    var picker = document.getElementById('emoji-picker');
+    if (picker) {
+      var options = picker.querySelectorAll('.emoji-option');
+      options.forEach(function(opt) {
+        opt.addEventListener('click', function() {
+          options.forEach(function(o) { o.classList.remove('selected'); });
+          opt.classList.add('selected');
+          document.getElementById('dream-emoji-input').value = opt.dataset.emoji;
+        });
+      });
+    }
+  }, 50);
+}
+
+function submitEditDream(dreamId) {
+  var nameEl = document.getElementById('dream-name-input');
+  var targetEl = document.getElementById('dream-target-input');
+  var dateEl = document.getElementById('dream-date-input');
+  var emojiEl = document.getElementById('dream-emoji-input');
+
+  var name = (nameEl ? nameEl.value.trim() : '');
+  var target = parseFloat(targetEl ? targetEl.value : 0);
+  var date = dateEl ? dateEl.value : '';
+  var emoji = emojiEl ? emojiEl.value : '🌟';
+
+  if (!name) {
+    showToast('请输入梦想名称', '⚠️');
+    return;
+  }
+  if (!target || target <= 0) {
+    showToast('请输入有效的目标金额', '⚠️');
+    return;
+  }
+
+  var data = loadData();
+  var dream = data.dreams.find(function(d) { return d.id === dreamId; });
+  if (!dream) return;
+
+  dream.name = name;
+  dream.target = target;
+  dream.date = date || null;
+  dream.emoji = emoji;
+
+  saveData(data);
+  closeDreamModal();
+  showToast('梦想已更新 ✨', '🌟');
+  renderDreams();
+}
+
+function deleteDream(dreamId) {
+  var data = loadData();
+  var dream = data.dreams.find(function(d) { return d.id === dreamId; });
+  if (!dream) return;
+
+  if (!confirmDialog('确定要删除梦想"' + dream.name + '"吗？此操作不可恢复。')) {
+    return;
+  }
+
+  data.dreams = data.dreams.filter(function(d) { return d.id !== dreamId; });
+  saveData(data);
+  showToast('梦想已删除', '🗑️');
+  renderDreams();
+}
+
+function depositToDream(dreamId) {
+  var data = loadData();
+  var dream = data.dreams.find(function(d) { return d.id === dreamId; });
+  if (!dream) return;
+
+  var remaining = dream.target - dream.saved;
+  if (remaining <= 0) {
+    showToast('梦想目标已达成！🎉', '🌟');
+    return;
+  }
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'dream-modal';
+
+  overlay.innerHTML =
+    '<div class="modal-sheet" onclick="event.stopPropagation();">' +
+    '<div class="modal-handle"></div>' +
+    '<h3 style="font-size:18px;font-weight:700;margin-bottom:16px;color:var(--text);">💰 存入梦想基金</h3>' +
+    '<div class="deposit-form">' +
+    '<div class="deposit-preview">' + (dream.emoji || '🌟') + '</div>' +
+    '<div class="deposit-info"><strong>' + escapeHtml(dream.name) + '</strong><br>目标: ' + formatMoney(dream.target) + ' | 已存: ' + formatMoney(dream.saved) + '<br>还需: ' + formatMoney(remaining) + '</div>' +
+    '<div class="form-group"><label class="form-label">存入金额</label><input type="number" class="input" id="deposit-amount-input" placeholder="' + formatMoney(remaining) + '" min="0.01" max="' + remaining + '" step="0.01" autofocus></div>' +
+    '<div class="flex gap-8 mt-8"><button class="btn btn-outline btn-block" onclick="closeDreamModal()">取消</button><button class="btn btn-primary btn-block" onclick="submitDeposit(\'' + dreamId + '\')">💰 确认存入</button></div>' +
+    '</div>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) {
+      closeDreamModal();
+    }
+  });
+
+  setTimeout(function() {
+    var input = document.getElementById('deposit-amount-input');
+    if (input) input.focus();
+  }, 100);
+}
+
+function submitDeposit(dreamId) {
+  var input = document.getElementById('deposit-amount-input');
+  var amount = parseFloat(input ? input.value : 0);
+
+  if (!amount || amount <= 0) {
+    showToast('请输入有效的存入金额', '⚠️');
+    return;
+  }
+
+  var data = loadData();
+  var dream = data.dreams.find(function(d) { return d.id === dreamId; });
+  if (!dream) return;
+
+  var remaining = dream.target - dream.saved;
+  if (amount > remaining) {
+    showToast('存入金额不能超过剩余目标 ' + formatMoney(remaining), '⚠️');
+    return;
+  }
+
+  dream.saved += amount;
+
+  saveData(data);
+  closeDreamModal();
+
+  confetti({ type: 'coin', count: 30, duration: 3000 });
+
+  showToast('已存入 ' + formatMoney(amount) + '！离梦想更近一步 ✨', '💰');
+
+  if (dream.saved >= dream.target) {
+    setTimeout(function() {
+      showToast('🎉 恭喜！"' + dream.name + '" 目标已达成！', '🌟');
+      confetti({ count: 80, duration: 4000 });
+    }, 1500);
+  }
+
+  renderDreams();
+}
+
+// ============================================
+// 模块2：每日待办
+// ============================================
+
+const FINANCE_QUICK_TASKS = [
+  '📝 记录今天的成功日记',
+  '💰 今天存了多少钱？',
+  '🦆 喂鹅了吗？',
+  '📖 阅读理财小知识',
+  '📊 今日记账了吗？',
+  '📈 本月支出复盘',
+  '💰 收入到账划转储蓄',
+  '🎯 检查本周财务目标',
+];
+
+const ENCOURAGE_MESSAGES = [
+  '太棒了！🎉',
+  '坚持就是胜利！💪',
+  '又进一步！🌟',
+  '你真了不起！👏',
+  '今天也很努力呢！✨',
+  '每一步都算数！🦶',
+  '习惯正在养成！🌱',
+];
+
+function renderTasks() {
+  const el = document.getElementById('page-tasks');
+  const data = loadData();
+  const tasks = data.tasks || [];
+
+  let html = '';
+
+  html += '<div class="card">';
+  html += '<div class="card-header"><span class="icon">✅</span> 今日待办</div>';
+  html += '<div class="input-group mb-8">';
+  html += '<input type="text" class="input" id="task-input" placeholder="添加新的待办事项..." />';
+  html += '<button class="btn btn-primary" onclick="addTask()">添加</button>';
+  html += '</div>';
+
+  html += '<div class="quick-tasks">';
+  FINANCE_QUICK_TASKS.forEach(function(t) {
+    html += '<button class="quick-task-btn" onclick="addQuickTask(\'' + escapeHtml(t) + '\')">' + t + '</button>';
+  });
+  html += '</div>';
+
+  html += '<div id="task-list">';
+  if (tasks.length === 0) {
+    html += '<div class="empty-state">';
+    html += '<div class="empty-icon">📋</div>';
+    html += '<div class="empty-text">还没有待办事项哦~</div>';
+    html += '<div class="empty-text" style="font-size:12px;margin-top:4px;">点击上方按钮快速添加理财小任务吧！</div>';
+    html += '</div>';
+  } else {
+    tasks.forEach(function(task) {
+      html += '<div class="task-item' + (task.done ? ' done' : '') + '" id="task-' + task.id + '">';
+      html += '<input type="checkbox" class="task-checkbox" ' + (task.done ? 'checked' : '') + ' onclick="toggleTask(\'' + task.id + '\')" />';
+      html += '<span class="task-text">' + escapeHtml(task.text) + '</span>';
+      html += '<button class="task-delete" onclick="deleteTask(\'' + task.id + '\')" title="删除">✕</button>';
+      html += '</div>';
+    });
+  }
+  html += '</div>';
+  html += '</div>';
+
+  el.innerHTML = html;
+
+  var input = document.getElementById('task-input');
+  if (input) {
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addTask();
+    });
+    setTimeout(function() { input.focus(); }, 100);
+  }
+}
+
+function addTask() {
+  var input = document.getElementById('task-input');
+  if (!input) return;
+  var text = input.value.trim();
+  if (!text) {
+    showToast('请输入待办内容', '📝');
+    return;
+  }
+
+  var data = loadData();
+  if (!data.tasks) data.tasks = [];
+  data.tasks.push({ id: generateId(), text: text, done: false, type: 'custom' });
+  saveData(data);
+  input.value = '';
+  renderTasks();
+  showToast('待办已添加', '✅');
+}
+
+function addQuickTask(text) {
+  var data = loadData();
+  if (!data.tasks) data.tasks = [];
+
+  var exists = data.tasks.some(function(t) { return t.text === text; });
+  if (exists) {
+    showToast('该任务已存在', '💡');
+    return;
+  }
+
+  data.tasks.push({ id: generateId(), text: text, done: false, type: 'finance' });
+  saveData(data);
+  renderTasks();
+  showToast('任务已添加', '✅');
+}
+
+function toggleTask(id) {
+  var data = loadData();
+  var task = (data.tasks || []).find(function(t) { return t.id === id; });
+  if (!task) return;
+
+  task.done = !task.done;
+  saveData(data);
+
+  if (task.done) {
+    confetti({ count: 30, type: 'confetti', duration: 2500 });
+    var msg = ENCOURAGE_MESSAGES[Math.floor(Math.random() * ENCOURAGE_MESSAGES.length)];
+    showToast(msg);
+  }
+
+  renderTasks();
+}
+
+function deleteTask(id) {
+  if (!confirmDialog('确定删除这条待办吗？')) return;
+
+  var data = loadData();
+  data.tasks = (data.tasks || []).filter(function(t) { return t.id !== id; });
+  saveData(data);
+  renderTasks();
+  showToast('待办已删除', '🗑️');
+}
+
+// ============================================
+// 模块2：金鹅储蓄追踪
+// ============================================
+
+const GOOSE_LEVELS = [
+  { min: 0, max: 999, emoji: '🥚', label: '蛋' },
+  { min: 1000, max: 4999, emoji: '🐥', label: '小鸡' },
+  { min: 5000, max: 9999, emoji: '🦆', label: '小鹅' },
+  { min: 10000, max: 49999, emoji: '🦢', label: '大鹅' },
+  { min: 50000, max: Infinity, emoji: '🦢', label: '金鹅', crown: true },
+];
+
+const ACCOUNT_CONFIG = [
+  { key: 'goose', name: '鹅账户', icon: '🦆', desc: '纯投资，本金永不取出', colorVar: '--acct-goose', cssClass: 'acct-goose' },
+  { key: 'dream', name: '梦想账户', icon: '🌟', desc: '买房、旅行、大件消费', colorVar: '--acct-dream', cssClass: 'acct-dream' },
+  { key: 'edu', name: '教育账户', icon: '📚', desc: '学习提升赚钱能力', colorVar: '--acct-edu', cssClass: 'acct-edu' },
+  { key: 'joy', name: '快乐账户', icon: '🎉', desc: '专门犒劳自己', colorVar: '--acct-joy', cssClass: 'acct-joy' },
+  { key: 'daily', name: '日常账户', icon: '🛒', desc: '日常生活开销', colorVar: '--acct-daily', cssClass: 'acct-daily' },
+];
+
+function getGooseLevel(balance) {
+  for (var i = GOOSE_LEVELS.length - 1; i >= 0; i--) {
+    if (balance >= GOOSE_LEVELS[i].min) return GOOSE_LEVELS[i];
+  }
+  return GOOSE_LEVELS[0];
+}
+
+function renderGoose() {
+  var el = document.getElementById('page-goose');
+  var data = loadData();
+  var accounts = data.accounts;
+  var incomes = data.incomes || [];
+
+  var gooseBalance = accounts.goose.balance;
+  var level = getGooseLevel(gooseBalance);
+  var gooseDisplay = level.emoji;
+  if (level.crown) gooseDisplay += '<span class="goose-crown">👑</span>';
+
+  // 计算总余额
+  var totalBalance = accounts.goose.balance + accounts.dream.balance +
+    accounts.edu.balance + accounts.joy.balance + accounts.daily.balance;
+
+  var now = new Date();
+  var thisMonth = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+  var monthIncomes = incomes.filter(function(inc) { return inc.date && inc.date.startsWith(thisMonth); });
+  var totalMonthIncome = monthIncomes.reduce(function(sum, inc) { return sum + (inc.amount || 0); }, 0);
+
+  var html = '';
+
+  // 金鹅展示区
+  html += '<div class="goose-display">';
+  html += '<div style="position:relative;display:inline-block;">';
+  html += '<span class="goose-emoji">' + gooseDisplay + '</span>';
+  html += '</div>';
+  html += '<div class="goose-level-tag">' + level.emoji + ' ' + level.label + '阶段</div>';
+  html += '<div class="goose-balance">' + formatMoney(gooseBalance) + '</div>';
+  html += '<div style="font-size:12px;color:var(--text-light);margin-top:2px;">总资产 ' + formatMoney(totalBalance) + '</div>';
+  html += '</div>';
+
+  // 操作栏
+  html += '<div class="action-bar">';
+  html += '<button class="btn btn-primary" onclick="openIncomeModal()">💰 录入收入</button>';
+  html += '<button class="btn btn-outline" onclick="openRatioModal()">⚙️ 比例</button>';
+  html += '</div>';
+
+  // 5账户紧凑列表
+  html += '<div class="account-list">';
+  ACCOUNT_CONFIG.forEach(function(cfg) {
+    var acct = accounts[cfg.key];
+    html += '<div class="account-row">';
+    html += '<div class="acct-color-bar" style="background:var(' + cfg.colorVar + ')"></div>';
+    html += '<span class="acct-row-icon">' + cfg.icon + '</span>';
+    html += '<div class="acct-row-info">';
+    html += '<div class="acct-row-top">';
+    html += '<span class="acct-row-name">' + cfg.name + '</span>';
+    html += '<span class="acct-row-ratio">' + acct.ratio + '%</span>';
+    html += '</div>';
+    html += '<div class="acct-row-bottom">';
+    html += '<span class="acct-row-balance">' + formatMoney(acct.balance) + '</span>';
+    html += '<span class="acct-row-monthly">本月 +' + formatMoney(acct.monthlyIn) + '</span>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // 可折叠：本月分配
+  if (totalMonthIncome > 0) {
+    html += '<div class="collapsible-card" id="alloc-card">';
+    html += '<div class="collapsible-header" onclick="toggleCollapse(\'alloc-card\')">';
+    html += '<div class="ch-icon"><span>📊</span> 本月收入分配</div>';
+    html += '<span class="ch-arrow">▼</span>';
+    html += '</div>';
+    html += '<div class="collapsible-body"><div class="collapsible-body-inner">';
+    html += '<div class="pie-chart">';
+    ACCOUNT_CONFIG.forEach(function(cfg) {
+      var acct = accounts[cfg.key];
+      html += '<div class="pie-item">';
+      html += '<div class="pie-color" style="background:var(' + cfg.colorVar + ')"></div>';
+      html += '<span class="pie-label">' + cfg.icon + ' ' + cfg.name + '</span>';
+      html += '<div class="pie-bar-track"><div class="pie-bar-fill" style="width:' + acct.ratio + '%;background:var(' + cfg.colorVar + ')"></div></div>';
+      html += '<span class="pie-percent">' + acct.ratio + '%</span>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '</div></div>';
+    html += '</div>';
+  }
+
+  // 可折叠：收入历史
+  html += '<div class="collapsible-card open" id="income-card">';
+  html += '<div class="collapsible-header" onclick="toggleCollapse(\'income-card\')">';
+  html += '<div class="ch-icon"><span>📋</span> 收入记录</div>';
+  html += '<span class="ch-arrow">▼</span>';
+  html += '</div>';
+  html += '<div class="collapsible-body"><div class="collapsible-body-inner">';
+  var recentIncomes = incomes.slice().reverse().slice(0, 10);
+  if (recentIncomes.length === 0) {
+    html += '<div class="empty-state" style="padding:24px 0;">';
+    html += '<div class="empty-icon">💸</div>';
+    html += '<div class="empty-text">还没有收入记录</div>';
+    html += '<div class="empty-text" style="font-size:12px;margin-top:4px;">点击上方按钮录入第一笔收入</div>';
+    html += '</div>';
+  } else {
+    html += '<div class="income-list">';
+    recentIncomes.forEach(function(inc) {
+      html += '<div class="income-item">';
+      html += '<div class="income-item-left">';
+      html += '<span class="income-amount">' + formatMoney(inc.amount) + '</span>';
+      html += '<span class="income-source">' + escapeHtml(inc.source || '未分类') + '</span>';
+      html += '</div>';
+      html += '<div style="display:flex;align-items:center;gap:8px;">';
+      html += '<span class="income-date">' + (inc.date || '') + '</span>';
+      html += '<button class="income-delete" onclick="deleteIncome(\'' + inc.id + '\')" title="删除">✕</button>';
+      html += '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+  html += '</div></div>';
+  html += '</div>';
+
+  el.innerHTML = html;
+}
+
+function toggleCollapse(cardId) {
+  var card = document.getElementById(cardId);
+  if (card) {
+    card.classList.toggle('open');
+  }
+}
+
+function openIncomeModal() {
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'income-modal';
+
+  var today = getTodayStr();
+  overlay.innerHTML = '<div class="modal-sheet">'
+    + '<div class="modal-handle"></div>'
+    + '<div class="modal-title">💰 录入收入</div>'
+    + '<div class="modal-form-group"><label class="modal-form-label">收入金额</label>'
+    + '<input type="number" class="input" id="income-amount" placeholder="请输入金额" step="0.01" min="0" /></div>'
+    + '<div class="modal-form-group"><label class="modal-form-label">收入来源</label>'
+    + '<input type="text" class="input" id="income-source" placeholder="如：工资、奖金、副业" /></div>'
+    + '<div class="modal-form-group"><label class="modal-form-label">日期</label>'
+    + '<input type="date" class="input" id="income-date" value="' + today + '" /></div>'
+    + '<div class="allocation-preview" id="allocation-preview"></div>'
+    + '<div class="modal-actions">'
+    + '<button class="btn btn-outline btn-block" onclick="closeIncomeModal()">取消</button>'
+    + '<button class="btn btn-primary btn-block" onclick="confirmIncome()">确认录入</button>'
+    + '</div>'
+    + '</div>';
+
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeIncomeModal();
+  });
+
+  var amountInput = document.getElementById('income-amount');
+  if (amountInput) {
+    amountInput.addEventListener('input', updateAllocationPreview);
+    setTimeout(function() { amountInput.focus(); }, 300);
+  }
+
+  updateAllocationPreview();
+}
+
+function closeIncomeModal() {
+  var modal = document.getElementById('income-modal');
+  if (modal) modal.remove();
+}
+
+function updateAllocationPreview() {
+  var preview = document.getElementById('allocation-preview');
+  if (!preview) return;
+
+  var amountInput = document.getElementById('income-amount');
+  var amount = parseFloat(amountInput ? amountInput.value : 0) || 0;
+  var data = loadData();
+  var accounts = data.accounts;
+
+  var html = '<div style="font-size:13px;font-weight:600;margin-bottom:6px;">📊 分配建议（可手动调整）</div>';
+
+  ACCOUNT_CONFIG.forEach(function(cfg) {
+    var acct = accounts[cfg.key];
+    var allocated = amount * acct.ratio / 100;
+    html += '<div class="allocation-row">';
+    html += '<span>' + cfg.icon + ' ' + cfg.name + ' (' + acct.ratio + '%)</span>';
+    html += '<input type="number" class="allocation-amount-input" data-acct="' + cfg.key + '" value="' + allocated.toFixed(2) + '" step="0.01" min="0" />';
+    html += '</div>';
+  });
+
+  preview.innerHTML = html;
+}
+
+function confirmIncome() {
+  var amountEl = document.getElementById('income-amount');
+  var sourceEl = document.getElementById('income-source');
+  var dateEl = document.getElementById('income-date');
+
+  var amount = parseFloat(amountEl ? amountEl.value : 0);
+  var source = sourceEl ? sourceEl.value.trim() : '';
+  var date = dateEl ? dateEl.value : getTodayStr();
+
+  if (!amount || amount <= 0) {
+    showToast('请输入有效的收入金额', '⚠️');
+    return;
+  }
+  if (!source) {
+    showToast('请输入收入来源', '⚠️');
+    return;
+  }
+
+  var data = loadData();
+  if (!data.incomes) data.incomes = [];
+
+  data.incomes.push({ id: generateId(), amount: amount, source: source, date: date });
+
+  var allocInputs = document.querySelectorAll('.allocation-amount-input');
+  if (allocInputs.length > 0) {
+    allocInputs.forEach(function(input) {
+      var key = input.dataset.acct;
+      var val = parseFloat(input.value) || 0;
+      if (data.accounts[key]) {
+        data.accounts[key].balance += val;
+        data.accounts[key].monthlyIn += val;
+      }
+    });
+  } else {
+    ACCOUNT_CONFIG.forEach(function(cfg) {
+      var acct = data.accounts[cfg.key];
+      var allocated = amount * acct.ratio / 100;
+      acct.balance += allocated;
+      acct.monthlyIn += allocated;
+    });
+  }
+
+  saveData(data);
+  closeIncomeModal();
+  renderGoose();
+  confetti({ count: 40, type: 'coin', duration: 3000 });
+  showToast('收入已录入，金鹅又长大了一点！', '💰');
+}
+
+function deleteIncome(id) {
+  if (!confirmDialog('确定删除这条收入记录吗？')) return;
+
+  var data = loadData();
+  var income = (data.incomes || []).find(function(inc) { return inc.id === id; });
+  if (!income) return;
+
+  var amount = income.amount;
+  ACCOUNT_CONFIG.forEach(function(cfg) {
+    var acct = data.accounts[cfg.key];
+    var allocated = amount * acct.ratio / 100;
+    acct.balance = Math.max(0, acct.balance - allocated);
+    acct.monthlyIn = Math.max(0, acct.monthlyIn - allocated);
+  });
+
+  data.incomes = data.incomes.filter(function(inc) { return inc.id !== id; });
+  saveData(data);
+  renderGoose();
+  showToast('收入记录已删除', '🗑️');
+}
+
+function openRatioModal() {
+  var data = loadData();
+  var accounts = data.accounts;
+
+  var overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'ratio-modal';
+
+  var html = '<div class="modal-sheet">'
+    + '<div class="modal-handle"></div>'
+    + '<div class="modal-title">⚙️ 账户比例设置</div>'
+    + '<div style="font-size:12px;color:var(--text-light);margin-bottom:12px;text-align:center;">调整5个账户的分配比例，总和需为100%</div>'
+    + '<div class="ratio-settings">';
+
+  ACCOUNT_CONFIG.forEach(function(cfg) {
+    html += '<div class="ratio-row">';
+    html += '<span class="ratio-label">' + cfg.icon + ' ' + cfg.name + '</span>';
+    html += '<input type="number" class="ratio-input" data-acct="' + cfg.key + '" value="' + accounts[cfg.key].ratio + '" min="0" max="100" oninput="updateRatioTotal()" />';
+    html += '<span style="font-size:12px;color:var(--text-light);">%</span>';
+    html += '</div>';
+  });
+
+  html += '<div class="ratio-total" id="ratio-total">总计: 100%</div>';
+
+  html += '<div class="modal-actions">'
+    + '<button class="btn btn-outline btn-block" onclick="closeRatioModal()">取消</button>'
+    + '<button class="btn btn-primary btn-block" onclick="confirmRatio()">保存设置</button>'
+    + '</div>';
+
+  html += '</div></div>';
+
+  overlay.innerHTML = html;
+  document.body.appendChild(overlay);
+
+  overlay.addEventListener('click', function(e) {
+    if (e.target === overlay) closeRatioModal();
+  });
+
+  updateRatioTotal();
+}
+
+function closeRatioModal() {
+  var modal = document.getElementById('ratio-modal');
+  if (modal) modal.remove();
+}
+
+function updateRatioTotal() {
+  var total = 0;
+  var inputs = document.querySelectorAll('#ratio-modal .ratio-input');
+  inputs.forEach(function(input) {
+    total += parseInt(input.value) || 0;
+  });
+
+  var totalEl = document.getElementById('ratio-total');
+  if (totalEl) {
+    totalEl.textContent = '总计: ' + total + '%';
+    totalEl.className = 'ratio-total ' + (total === 100 ? 'valid' : 'invalid');
+  }
+}
+
+function confirmRatio() {
+  var total = 0;
+  var ratios = {};
+
+  var inputs = document.querySelectorAll('#ratio-modal .ratio-input');
+  inputs.forEach(function(input) {
+    var key = input.dataset.acct;
+    var val = parseInt(input.value) || 0;
+    ratios[key] = val;
+    total += val;
+  });
+
+  if (total !== 100) {
+    showToast('比例总和必须为100%，当前为' + total + '%', '⚠️');
+    return;
+  }
+
+  var data = loadData();
+  for (var key in ratios) {
+    if (data.accounts[key]) {
+      data.accounts[key].ratio = ratios[key];
+    }
+  }
+  saveData(data);
+  closeRatioModal();
+  renderGoose();
+  showToast('账户比例已更新', '✅');
+}
+
+// ============================================
+// 模块2：成功日记
+// ============================================
+
+var diaryViewDate = getTodayStr();
+
+function renderDiary() {
+  var el = document.getElementById('sub-page-container') || document.getElementById('page-diary');
+  renderDiaryInto(el);
+}
+
+function renderDiaryInto(el) {
+  if (!el) el = document.getElementById('sub-page-container');
+  var data = loadData();
+  var diaries = data.diaries || {};
+  var streak = data.streak || 0;
+  var today = getTodayStr();
+
+  var entries = diaries[diaryViewDate] || [];
+  var isToday = diaryViewDate === today;
+  var canGoNext = diaryViewDate < today;
+
+  var html = '';
+
+  html += '<div class="diary-header">';
+  html += '<span class="streak-badge">🔥 连续 ' + streak + ' 天</span>';
+  html += '</div>';
+
+  html += '<div class="date-nav">';
+  html += '<button class="date-nav-btn" onclick="changeDiaryDate(-1)">◀</button>';
+  html += '<span class="date-nav-display">' + formatDate(diaryViewDate) + (isToday ? ' (今天)' : '') + '</span>';
+  html += '<button class="date-nav-btn" onclick="changeDiaryDate(1)" ' + (!canGoNext ? 'disabled' : '') + '>▶</button>';
+  html += '</div>';
+
+  html += '<div class="card">';
+  html += '<div class="card-header"><span class="icon">📝</span> ' + (isToday ? '今日成功记录' : '成功记录') + '</div>';
+
+  if (!isToday && entries.length === 0) {
+    html += '<div class="empty-state" style="padding:20px;">';
+    html += '<div class="empty-icon">📖</div>';
+    html += '<div class="empty-text">这一天还没有记录</div>';
+    html += '</div>';
+  } else {
+    html += '<div class="diary-entry-count">已记录 ' + entries.length + '/5 条</div>';
+
+    entries.forEach(function(entry, idx) {
+      html += '<div class="diary-entry">';
+      html += '<span class="diary-entry-number">' + (idx + 1) + '</span>';
+      html += '<span class="diary-entry-text">' + escapeHtml(entry.text) + '</span>';
+      if (isToday) {
+        html += '<button class="diary-entry-delete" onclick="deleteDiaryEntry(\'' + entry.id + '\')" title="删除">✕</button>';
+      }
+      html += '</div>';
+    });
+
+    if (isToday && entries.length < 5) {
+      html += '<div class="diary-add-row mt-8">';
+      html += '<input type="text" class="input diary-add-input" id="diary-new-input" placeholder="今天完成了什么了不起的事？" />';
+      html += '<button class="btn btn-primary btn-sm" onclick="addDiaryEntry()">记录</button>';
+      html += '</div>';
+    }
+
+    if (isToday && entries.length > 0) {
+      html += '<div class="mt-8 text-right">';
+      html += '<button class="btn btn-outline btn-sm" onclick="saveDiaryToday()">💾 保存并庆祝</button>';
+      html += '</div>';
+    }
+  }
+
+  html += '</div>';
+
+  html += '<div class="card">';
+  html += '<div class="card-header"><span class="icon">📅</span> 最近7天</div>';
+  html += '<div class="history-cards">';
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    var dateStr = d.toISOString().split('T')[0];
+    var dayEntries = diaries[dateStr] || [];
+    var isSelected = dateStr === diaryViewDate;
+
+    html += '<div class="history-card' + (isSelected ? ' selected' : '') + '" onclick="viewDiaryDate(\'' + dateStr + '\')">';
+    html += '<div class="history-card-date">' + (d.getMonth() + 1) + '/' + d.getDate() + '</div>';
+    html += '<div class="history-card-count">' + dayEntries.length + '</div>';
+    html += '<div style="font-size:10px;color:var(--text-light);">条</div>';
+    html += '</div>';
+  }
+  html += '</div>';
+  html += '</div>';
+
+  el.innerHTML = html;
+
+  var input = document.getElementById('diary-new-input');
+  if (input) {
+    input.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') addDiaryEntry();
+    });
+    setTimeout(function() { input.focus(); }, 100);
+  }
+}
+
+function changeDiaryDate(delta) {
+  var d = new Date(diaryViewDate);
+  d.setDate(d.getDate() + delta);
+
+  var newDate = d.toISOString().split('T')[0];
+  var today = getTodayStr();
+
+  if (newDate > today) return;
+
+  diaryViewDate = newDate;
+  renderDiary();
+}
+
+function viewDiaryDate(dateStr) {
+  diaryViewDate = dateStr;
+  renderDiary();
+}
+
+function addDiaryEntry() {
+  var input = document.getElementById('diary-new-input');
+  if (!input) return;
+  var text = input.value.trim();
+  if (!text) {
+    showToast('请输入成功记录', '📝');
+    return;
+  }
+
+  var data = loadData();
+  var today = getTodayStr();
+  if (!data.diaries) data.diaries = {};
+  if (!data.diaries[today]) data.diaries[today] = [];
+
+  if (data.diaries[today].length >= 5) {
+    showToast('每天最多记录5条哦', '💡');
+    return;
+  }
+
+  data.diaries[today].push({ id: generateId(), text: text });
+  saveData(data);
+  input.value = '';
+
+  diaryViewDate = today;
+  renderDiary();
+
+  var newInput = document.getElementById('diary-new-input');
+  if (newInput) newInput.focus();
+
+  showToast('已记录 ' + data.diaries[today].length + '/5 条', '✍️');
+}
+
+function deleteDiaryEntry(id) {
+  if (!confirmDialog('确定删除这条记录吗？')) return;
+
+  var data = loadData();
+  var today = getTodayStr();
+  if (data.diaries && data.diaries[today]) {
+    data.diaries[today] = data.diaries[today].filter(function(e) { return e.id !== id; });
+    saveData(data);
+    renderDiary();
+    showToast('记录已删除', '🗑️');
+  }
+}
+
+function saveDiaryToday() {
+  var data = loadData();
+  var today = getTodayStr();
+  var entries = (data.diaries && data.diaries[today]) ? data.diaries[today] : [];
+
+  if (entries.length === 0) {
+    showToast('今天还没有记录呢', '📖');
+    return;
+  }
+
+  if (data.lastDiaryDate) {
+    var lastDate = new Date(data.lastDiaryDate);
+    var curDate = new Date(today);
+    var diffDays = Math.floor((curDate - lastDate) / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 1) {
+      data.streak = (data.streak || 0) + 1;
+    } else if (diffDays > 1) {
+      data.streak = 1;
+    }
+  } else {
+    data.streak = 1;
+  }
+
+  data.lastDiaryDate = today;
+  saveData(data);
+
+  confetti({ count: 50, type: 'confetti', duration: 3500 });
+  showToast('成功日记已保存！连续 ' + data.streak + ' 天 🔥');
+
+  renderDiary();
+}
+
+// ============================================
+// 模块3：财务自由之路
+// ============================================
+
+function renderFreedom() {
+  const el = document.getElementById('sub-page-container') || document.getElementById('page-freedom');
+  renderFreedomInto(el);
+}
+
+function renderFreedomInto(el) {
+  if (!el) el = document.getElementById('sub-page-container');
+  const data = loadData();
+  const f = data.freedom;
+
+  if (f.monthlyEssential > 0) {
+    if (f.emergencyFund >= f.monthlyEssential * 6) {
+      f.phase1Complete = true;
+    }
+    if (f.phase1Complete && f.investmentPrincipal >= f.monthlyEssential * 150) {
+      f.phase2Complete = true;
+    }
+  }
+  saveData(data);
+
+  const target1 = f.monthlyEssential * 6;
+  const target2 = f.monthlyEssential * 150;
+  const passiveIncomeMonthly = f.investmentPrincipal * 0.08 / 12;
+  const target3 = f.idealMonthly * 150;
+  const goldenEggCoverage = f.idealMonthly > 0 ? (passiveIncomeMonthly / f.idealMonthly * 100) : 0;
+
+  let currentPhase = 1;
+  if (f.phase2Complete) currentPhase = 3;
+  else if (f.phase1Complete) currentPhase = 2;
+
+  el.innerHTML = `
+    <div class="section-title-row">
+      <div class="section-title">🗺️ 财务自由三阶段</div>
+    </div>
+
+    <button class="settings-fab" onclick="openFreedomSettings()">
+      ⚙️ 财务自由数据设置
+    </button>
+
+    <div class="freedom-steps">
+
+      <div class="phase-card ${currentPhase === 1 ? 'phase-active' : ''} ${f.phase1Complete ? 'phase-complete' : ''}"
+           style="--phase-color: var(--phase1)">
+        <div class="phase-step-bar"></div>
+        <div class="phase-header">
+          <span class="phase-icon-lg">🛡️</span>
+          <div class="phase-title-area">
+            <div class="phase-title">财务保障</div>
+            <div class="phase-subtitle">存够6-12个月应急金</div>
+          </div>
+          ${f.phase1Complete
+            ? '<span class="phase-status-badge" style="background:rgba(76,175,80,0.15);color:var(--phase1)">✓ 已完成</span>'
+            : currentPhase === 1
+              ? '<span class="phase-status-badge" style="background:rgba(76,175,80,0.1);color:var(--phase1)">进行中</span>'
+              : ''
+          }
+        </div>
+        <div class="phase-body">
+          <div class="phase-info-row">
+            <span class="label">月必要支出</span>
+            <span class="value">${f.monthlyEssential > 0 ? formatMoney(f.monthlyEssential) : '未设置'}</span>
+          </div>
+          <div class="phase-info-row">
+            <span class="label">目标应急金（6个月）</span>
+            <span class="value">${f.monthlyEssential > 0 ? formatMoney(target1) : '—'}</span>
+          </div>
+          <div class="phase-info-row">
+            <span class="label">当前应急金</span>
+            <span class="value">${formatMoney(f.emergencyFund)}</span>
+          </div>
+          <div class="phase-progress-section">
+            <div class="phase-progress-bar">
+              <div class="phase-progress-fill" style="width:${Math.min(100, f.monthlyEssential > 0 ? (f.emergencyFund / target1 * 100) : 0)}%"></div>
+            </div>
+          </div>
+          ${f.monthlyEssential > 0 && !f.phase1Complete
+            ? `<div class="phase-hint">还需存 ${formatMoney(Math.max(0, target1 - f.emergencyFund))} 即可完成此阶段</div>`
+            : ''
+          }
+          ${f.monthlyEssential === 0
+            ? `<div class="phase-hint">请先设置月必要支出，以计算目标金额</div>`
+            : ''
+          }
+          <div class="phase-actions">
+            <button class="btn btn-primary btn-sm" onclick="openEmergencyFundModal()">💰 存入应急金</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="phase-card ${currentPhase === 2 ? 'phase-active' : ''} ${!f.phase1Complete ? 'phase-locked' : ''} ${f.phase2Complete ? 'phase-complete' : ''}"
+           style="--phase-color: var(--phase2)">
+        <div class="phase-step-bar"></div>
+        <div class="phase-header">
+          <span class="phase-icon-lg">${f.phase1Complete ? '🔒' : '🔒'}</span>
+          <div class="phase-title-area">
+            <div class="phase-title">财务安全</div>
+            <div class="phase-subtitle">被动收入覆盖基本开支</div>
+          </div>
+          ${f.phase2Complete
+            ? '<span class="phase-status-badge" style="background:rgba(33,150,243,0.15);color:var(--phase2)">✓ 已完成</span>'
+            : f.phase1Complete
+              ? '<span class="phase-status-badge" style="background:rgba(33,150,243,0.1);color:var(--phase2)">进行中</span>'
+              : '<span class="phase-status-badge" style="background:rgba(0,0,0,0.06);color:var(--text-light)">🔒 未解锁</span>'
+          }
+        </div>
+        <div class="phase-body">
+          ${!f.phase1Complete
+            ? `<div class="phase-locked-hint">🔒 请先完成「财务保障」阶段</div>`
+            : `
+              <div class="phase-info-row">
+                <span class="label">所需投资本金</span>
+                <span class="value">${formatMoney(target2)}</span>
+              </div>
+              <div class="phase-info-row">
+                <span class="label">当前投资本金</span>
+                <span class="value">${formatMoney(f.investmentPrincipal)}</span>
+              </div>
+              <div class="phase-info-row">
+                <span class="label">预期月被动收入（8%年化）</span>
+                <span class="value">${formatMoney(passiveIncomeMonthly)}</span>
+              </div>
+              <div class="phase-info-row">
+                <span class="label">月基本开支</span>
+                <span class="value">${formatMoney(f.monthlyEssential)}</span>
+              </div>
+              <div class="phase-progress-section">
+                <div class="phase-progress-bar">
+                  <div class="phase-progress-fill" style="width:${Math.min(100, f.investmentPrincipal / target2 * 100)}%"></div>
+                </div>
+              </div>
+              ${!f.phase2Complete
+                ? `<div class="phase-hint">还需 ${formatMoney(Math.max(0, target2 - f.investmentPrincipal))} 投资本金</div>`
+                : ''
+              }
+              <div class="phase-actions">
+                <button class="btn btn-primary btn-sm" onclick="openInvestmentModal()">📈 记录投资本金</button>
+              </div>
+            `
+          }
+        </div>
+      </div>
+
+      <div class="phase-card ${currentPhase === 3 ? 'phase-active' : ''} ${!f.phase2Complete ? 'phase-locked' : ''}"
+           style="--phase-color: var(--phase3)">
+        <div class="phase-step-bar"></div>
+        <div class="phase-header">
+          <span class="phase-icon-lg">🦅</span>
+          <div class="phase-title-area">
+            <div class="phase-title">财务自由</div>
+            <div class="phase-subtitle">只花金蛋，不动本金</div>
+          </div>
+          ${!f.phase2Complete
+            ? '<span class="phase-status-badge" style="background:rgba(0,0,0,0.06);color:var(--text-light)">🔒 未解锁</span>'
+            : currentPhase === 3
+              ? '<span class="phase-status-badge" style="background:rgba(156,39,176,0.15);color:var(--phase3)">进行中</span>'
+              : ''
+          }
+        </div>
+        <div class="phase-body">
+          ${!f.phase2Complete
+            ? `<div class="phase-locked-hint">🔒 请先完成「财务安全」阶段</div>`
+            : `
+              <div class="phase-info-row">
+                <span class="label">理想生活月支出</span>
+                <span class="value">${f.idealMonthly > 0 ? formatMoney(f.idealMonthly) : '未设置'}</span>
+              </div>
+              <div class="phase-info-row">
+                <span class="label">所需总本金</span>
+                <span class="value">${f.idealMonthly > 0 ? formatMoney(target3) : '—'}</span>
+              </div>
+              <div class="phase-info-row">
+                <span class="label">当前月被动收入</span>
+                <span class="value">${formatMoney(passiveIncomeMonthly)}</span>
+              </div>
+              ${f.idealMonthly > 0 ? `
+                <div class="phase-progress-section">
+                  <div class="phase-info-row">
+                    <span class="label">金蛋覆盖率</span>
+                    <span class="value" style="color:${goldenEggCoverage >= 100 ? 'var(--phase1)' : 'var(--phase3)'}">${formatPercent(goldenEggCoverage)}</span>
+                  </div>
+                  <div class="phase-progress-bar">
+                    <div class="phase-progress-fill" style="width:${Math.min(100, goldenEggCoverage)}%"></div>
+                  </div>
+                </div>
+              ` : ''}
+              <div class="golden-egg-card">
+                <div class="egg-title">🥚 只花金蛋，不动本金</div>
+                <div class="egg-sub">让被动收入覆盖你的理想生活，本金永不动用</div>
+              </div>
+            `
+          }
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
+function openFreedomSettings() {
+  const data = loadData();
+  const f = data.freedom;
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="card-header"><span class="icon">⚙️</span> 财务自由数据设置</div>
+    <div class="modal-field">
+      <label>月必要支出 <span class="hint">用于阶段1/2计算</span></label>
+      <input class="input" type="number" id="fs-monthly-essential" value="${f.monthlyEssential || ''}" placeholder="如 8000">
+    </div>
+    <div class="modal-field">
+      <label>当前应急金</label>
+      <input class="input" type="number" id="fs-emergency-fund" value="${f.emergencyFund || ''}" placeholder="如 50000">
+    </div>
+    <div class="modal-field">
+      <label>当前投资本金</label>
+      <input class="input" type="number" id="fs-investment-principal" value="${f.investmentPrincipal || ''}" placeholder="如 200000">
+    </div>
+    <div class="modal-field">
+      <label>月被动收入 <span class="hint">如有（手动记录）</span></label>
+      <input class="input" type="number" id="fs-passive-income" value="${f.passiveIncome || ''}" placeholder="如 1500">
+    </div>
+    <div class="modal-field">
+      <label>理想生活月支出</label>
+      <input class="input" type="number" id="fs-ideal-monthly" value="${f.idealMonthly || ''}" placeholder="如 20000">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveFreedomSettings()">保存</button>
+    </div>
+  `);
+}
+
+function saveFreedomSettings() {
+  const data = loadData();
+  data.freedom.monthlyEssential = parseFloat(document.getElementById('fs-monthly-essential').value) || 0;
+  data.freedom.emergencyFund = parseFloat(document.getElementById('fs-emergency-fund').value) || 0;
+  data.freedom.investmentPrincipal = parseFloat(document.getElementById('fs-investment-principal').value) || 0;
+  data.freedom.passiveIncome = parseFloat(document.getElementById('fs-passive-income').value) || 0;
+  data.freedom.idealMonthly = parseFloat(document.getElementById('fs-ideal-monthly').value) || 0;
+  saveData(data);
+  closeModal();
+  showToast('财务数据已更新', '✅');
+  renderFreedom();
+}
+
+function openEmergencyFundModal() {
+  const data = loadData();
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="card-header"><span class="icon">💰</span> 存入应急金</div>
+    <div class="modal-field">
+      <label>存入金额</label>
+      <input class="input" type="number" id="ef-amount" placeholder="如 5000" autofocus>
+    </div>
+    <p class="text-muted" style="font-size:12px;">当前应急金：${formatMoney(data.freedom.emergencyFund)}</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="addEmergencyFund()">确认存入</button>
+    </div>
+  `);
+}
+
+function addEmergencyFund() {
+  const amount = parseFloat(document.getElementById('ef-amount').value);
+  if (!amount || amount <= 0) {
+    showToast('请输入有效金额', '⚠️');
+    return;
+  }
+  const data = loadData();
+  const wasComplete = data.freedom.phase1Complete;
+  data.freedom.emergencyFund += amount;
+
+  if (data.freedom.monthlyEssential > 0 && data.freedom.emergencyFund >= data.freedom.monthlyEssential * 6) {
+    data.freedom.phase1Complete = true;
+    if (!wasComplete) {
+      closeModal();
+      showToast('🎉 财务保障阶段完成！', '🛡️');
+      confetti({ count: 50, type: 'coin', duration: 3000 });
+      saveData(data);
+      renderFreedom();
+      return;
+    }
+  }
+
+  saveData(data);
+  closeModal();
+  showToast(`已存入 ${formatMoney(amount)}`, '💰');
+  renderFreedom();
+}
+
+function openInvestmentModal() {
+  const data = loadData();
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="card-header"><span class="icon">📈</span> 记录投资本金</div>
+    <div class="modal-field">
+      <label>投资本金金额</label>
+      <input class="input" type="number" id="inv-amount" placeholder="如 50000" autofocus>
+    </div>
+    <p class="text-muted" style="font-size:12px;">当前投资本金：${formatMoney(data.freedom.investmentPrincipal)}</p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="addInvestmentPrincipal()">确认记录</button>
+    </div>
+  `);
+}
+
+function addInvestmentPrincipal() {
+  const amount = parseFloat(document.getElementById('inv-amount').value);
+  if (!amount || amount <= 0) {
+    showToast('请输入有效金额', '⚠️');
+    return;
+  }
+  const data = loadData();
+  const wasComplete = data.freedom.phase2Complete;
+  data.freedom.investmentPrincipal += amount;
+
+  if (data.freedom.monthlyEssential > 0 && data.freedom.investmentPrincipal >= data.freedom.monthlyEssential * 150) {
+    data.freedom.phase2Complete = true;
+    if (!wasComplete) {
+      closeModal();
+      showToast('🎉 财务安全阶段完成！', '🔒');
+      confetti({ count: 60, type: 'confetti', duration: 3000 });
+      saveData(data);
+      renderFreedom();
+      return;
+    }
+  }
+
+  saveData(data);
+  closeModal();
+  showToast(`已记录 ${formatMoney(amount)}`, '📈');
+  renderFreedom();
+}
+
+// ============================================
+// 模块3：债务管理
+// ============================================
+
+function renderDebt(container) {
+  const data = loadData();
+  const debts = data.debts || [];
+
+  const sortedDebts = [...debts].sort((a, b) => b.rate - a.rate);
+  const highestRate = sortedDebts.length > 0 ? sortedDebts[0].rate : 0;
+
+  const totalDebt = debts.reduce((sum, d) => sum + d.total, 0);
+  const totalPaid = debts.reduce((sum, d) => sum + d.paid, 0);
+  const totalRemaining = totalDebt - totalPaid;
+  const overallProgress = totalDebt > 0 ? (totalPaid / totalDebt * 100) : 0;
+
+  const halfCash = (data.extraCash || 0) / 2;
+
+  container.innerHTML = `
+    <div class="debt-summary-card">
+      <div class="section-title-row">
+        <div class="section-title">📊 总债务概览</div>
+      </div>
+      <div class="debt-summary-grid">
+        <div class="debt-summary-item">
+          <div class="ds-label">总负债</div>
+          <div class="ds-value" style="color:var(--debt-red)">${formatMoney(totalDebt)}</div>
+        </div>
+        <div class="debt-summary-item">
+          <div class="ds-label">已还总额</div>
+          <div class="ds-value" style="color:var(--phase1)">${formatMoney(totalPaid)}</div>
+        </div>
+        <div class="debt-summary-item">
+          <div class="ds-label">剩余总额</div>
+          <div class="ds-value">${formatMoney(totalRemaining)}</div>
+        </div>
+      </div>
+      <div class="progress-bar" style="height:10px;">
+        <div class="progress-fill" style="width:${overallProgress}%;background:linear-gradient(90deg,var(--phase1),var(--gold))"></div>
+      </div>
+      <div class="text-center text-muted mt-8" style="font-size:12px;">总还款进度 ${formatPercent(overallProgress)}</div>
+    </div>
+
+    <div class="principle-5050-card">
+      <div class="principle-5050-title">⚖️ 50/50 原则</div>
+      <p class="text-muted" style="font-size:12px;">每月闲钱，一半还债、一半储蓄，两手都要抓</p>
+      <div class="modal-field" style="margin-top:10px;margin-bottom:0">
+        <div class="flex-between">
+          <label style="margin:0;font-size:13px;">每月闲钱</label>
+          <span class="text-muted" style="font-size:12px;">${formatMoney(data.extraCash || 0)}</span>
+        </div>
+        <input class="input mt-8" type="number" id="extra-cash-input" value="${data.extraCash || ''}" placeholder="设置每月闲钱" oninput="updateExtraCash(this.value)">
+      </div>
+      <div class="principle-5050-split">
+        <div class="principle-5050-half half-debt">
+          <div class="half-label">💳 还债 (50%)</div>
+          <div class="half-value">${formatMoney(halfCash)}</div>
+        </div>
+        <div class="principle-5050-half half-save">
+          <div class="half-label">🏦 储蓄 (50%)</div>
+          <div class="half-value">${formatMoney(halfCash)}</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-block mb-12" onclick="openAddDebtModal()">➕ 添加债务</button>
+
+    ${sortedDebts.length === 0
+      ? `<div class="empty-state">
+          <div class="empty-icon">💳</div>
+          <div class="empty-text">暂无债务记录<br>保持无债一身轻！</div>
+        </div>`
+      : sortedDebts.map(d => {
+          const remaining = d.total - d.paid;
+          const progress = d.total > 0 ? (d.paid / d.total * 100) : 0;
+          const monthsLeft = d.monthlyPayment > 0 ? Math.ceil(remaining / d.monthlyPayment) : 0;
+          const payoffDate = monthsLeft > 0 ? getPayoffDateStr(monthsLeft) : '—';
+          const isHighest = d.rate === highestRate && debts.length > 1;
+
+          return `
+            <div class="debt-item-card ${isHighest ? 'highlight-debt' : ''}">
+              <div class="debt-item-header">
+                <div class="debt-item-name">${escapeHtml(d.name)} ${isHighest ? '<span class="badge badge-red" style="margin-left:4px">优先还清</span>' : ''}</div>
+                <div class="debt-item-rate-badge">月利率 ${formatPercent(d.rate)}</div>
+              </div>
+              <div class="debt-item-details">
+                <span class="detail-label">总额</span>
+                <span class="detail-value">${formatMoney(d.total)}</span>
+                <span class="detail-label">已还</span>
+                <span class="detail-value" style="color:var(--phase1)">${formatMoney(d.paid)}</span>
+                <span class="detail-label">剩余</span>
+                <span class="detail-value" style="color:var(--debt-red)">${formatMoney(remaining)}</span>
+                <span class="detail-label">月还款</span>
+                <span class="detail-value">${formatMoney(d.monthlyPayment)}</span>
+              </div>
+              <div class="debt-progress-section">
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width:${progress}%;background:linear-gradient(90deg,var(--phase1),var(--gold))"></div>
+                </div>
+              </div>
+              ${monthsLeft > 0
+                ? `<div class="debt-countdown">
+                    📅 预计 <span class="countdown-date">${payoffDate}</span> 还清（还需 ${monthsLeft} 个月）
+                  </div>`
+                : remaining <= 0
+                  ? `<div class="debt-countdown" style="color:var(--phase1)">🎉 已还清！</div>`
+                  : ''
+              }
+              <div class="debt-item-actions">
+                <button class="btn btn-primary btn-sm" onclick="openRepayModal('${d.id}')">💰 还款</button>
+                <button class="btn btn-outline btn-sm" onclick="deleteDebt('${d.id}')">🗑️ 删除</button>
+              </div>
+            </div>
+          `;
+      }).join('')
+    }
+  `;
+}
+
+function getPayoffDateStr(monthsLeft) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + monthsLeft);
+  return `${d.getFullYear()}年${d.getMonth() + 1}月`;
+}
+
+function updateExtraCash(val) {
+  const data = loadData();
+  data.extraCash = parseFloat(val) || 0;
+  saveData(data);
+  const halfCash = data.extraCash / 2;
+  const halves = document.querySelectorAll('.principle-5050-half .half-value');
+  if (halves.length >= 2) {
+    halves[0].textContent = formatMoney(halfCash);
+    halves[1].textContent = formatMoney(halfCash);
+  }
+  const cashLabel = document.querySelector('#extra-cash-input').parentElement.querySelector('.text-muted');
+  if (cashLabel) cashLabel.textContent = formatMoney(data.extraCash);
+}
+
+function openAddDebtModal() {
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="card-header"><span class="icon">➕</span> 添加债务</div>
+    <div class="modal-field">
+      <label>债务名称</label>
+      <input class="input" id="debt-name" placeholder="如 信用卡、花呗" autofocus>
+    </div>
+    <div class="modal-field">
+      <label>总额</label>
+      <input class="input" type="number" id="debt-total" placeholder="如 20000">
+    </div>
+    <div class="modal-field">
+      <label>月利率 (%)</label>
+      <input class="input" type="number" id="debt-rate" placeholder="如 1.5" step="0.01">
+    </div>
+    <div class="modal-field">
+      <label>月还款额</label>
+      <input class="input" type="number" id="debt-monthly" placeholder="如 2000">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="addDebt()">添加</button>
+    </div>
+  `);
+}
+
+function addDebt() {
+  const name = document.getElementById('debt-name').value.trim();
+  const total = parseFloat(document.getElementById('debt-total').value);
+  const rate = parseFloat(document.getElementById('debt-rate').value);
+  const monthly = parseFloat(document.getElementById('debt-monthly').value);
+
+  if (!name) { showToast('请输入债务名称', '⚠️'); return; }
+  if (!total || total <= 0) { showToast('请输入有效总额', '⚠️'); return; }
+  if (isNaN(rate) || rate < 0) { showToast('请输入有效利率', '⚠️'); return; }
+  if (!monthly || monthly <= 0) { showToast('请输入有效月还款额', '⚠️'); return; }
+
+  const data = loadData();
+  data.debts.push({
+    id: generateId(),
+    name,
+    total,
+    rate,
+    monthlyPayment: monthly,
+    paid: 0,
+  });
+  saveData(data);
+  closeModal();
+  showToast('债务已添加', '✅');
+  renderDebt(document.getElementById('sub-page-container'));
+}
+
+function openRepayModal(debtId) {
+  const data = loadData();
+  const debt = data.debts.find(d => d.id === debtId);
+  if (!debt) return;
+  const remaining = debt.total - debt.paid;
+
+  showModal(`
+    <div class="modal-handle"></div>
+    <div class="card-header"><span class="icon">💰</span> 还款 - ${escapeHtml(debt.name)}</div>
+    <div class="modal-field">
+      <label>还款金额</label>
+      <input class="input" type="number" id="repay-amount" placeholder="如 2000" autofocus>
+      <p class="text-muted mt-8" style="font-size:12px;">剩余：${formatMoney(remaining)}</p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="repayDebt('${debtId}')">确认还款</button>
+    </div>
+  `);
+}
+
+function repayDebt(debtId) {
+  const amount = parseFloat(document.getElementById('repay-amount').value);
+  if (!amount || amount <= 0) {
+    showToast('请输入有效金额', '⚠️');
+    return;
+  }
+
+  const data = loadData();
+  const debt = data.debts.find(d => d.id === debtId);
+  if (!debt) return;
+
+  const remaining = debt.total - debt.paid;
+  if (amount > remaining) {
+    showToast('还款金额超过剩余债务', '⚠️');
+    return;
+  }
+
+  debt.paid += amount;
+  saveData(data);
+  closeModal();
+
+  if (debt.paid >= debt.total) {
+    showToast('🎉 债务已还清！', '✅');
+    confetti({ count: 40, type: 'confetti', duration: 3000 });
+  } else {
+    showToast(`已还款 ${formatMoney(amount)}`, '💰');
+  }
+
+  renderDebt(document.getElementById('sub-page-container'));
+}
+
+function deleteDebt(debtId) {
+  if (!confirmDialog('确定删除这条债务记录？')) return;
+  const data = loadData();
+  data.debts = data.debts.filter(d => d.id !== debtId);
+  saveData(data);
+  showToast('债务已删除', '🗑️');
+  renderDebt(document.getElementById('sub-page-container'));
+}
+
+// ============================================
+// 模块3：财务计算器
+// ============================================
+
+function renderCalculator(container) {
+  container.innerHTML = `
+    <div class="calc-tool-card expanded" id="calc-phases">
+      <div class="calc-tool-header" onclick="toggleCalcCard('calc-phases')">
+        <div class="calc-tool-title"><span>📊</span> 三阶段所需本金计算器</div>
+        <span class="calc-tool-toggle">▼</span>
+      </div>
+      <div class="calc-tool-body">
+        <div class="calc-tool-inner">
+          <div class="calc-input-group">
+            <div class="calc-input-label">月开支（元）</div>
+            <input class="input" type="number" id="calc-phases-monthly" placeholder="如 8000" oninput="calcPhases()">
+          </div>
+          <div class="calc-output">
+            <table class="calc-result-table" id="calc-phases-table" style="display:none">
+              <thead>
+                <tr><th>阶段</th><th>公式</th><th style="text-align:right">所需金额</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>🛡️ 财务保障</td>
+                  <td style="font-size:11px;color:var(--text-light)">月开支×6</td>
+                  <td class="value-cell" id="cp-phase1">—</td>
+                </tr>
+                <tr>
+                  <td>🔒 财务安全</td>
+                  <td style="font-size:11px;color:var(--text-light)">月开支×150</td>
+                  <td class="value-cell" id="cp-phase2">—</td>
+                </tr>
+                <tr>
+                  <td>🦅 财务自由</td>
+                  <td style="font-size:11px;color:var(--text-light)">理想月支出×150</td>
+                  <td class="value-cell" id="cp-phase3">—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="calc-tool-card" id="calc-compound">
+      <div class="calc-tool-header" onclick="toggleCalcCard('calc-compound')">
+        <div class="calc-tool-title"><span>📈</span> 复利计算器</div>
+        <span class="calc-tool-toggle">▼</span>
+      </div>
+      <div class="calc-tool-body">
+        <div class="calc-tool-inner">
+          <div class="calc-input-group">
+            <div class="calc-input-label">初始本金（元）</div>
+            <input class="input" type="number" id="calc-cp-principal" placeholder="如 10000" oninput="calcCompound()">
+          </div>
+          <div class="calc-input-group">
+            <div class="calc-input-label">每月定投（元）</div>
+            <input class="input" type="number" id="calc-cp-monthly" placeholder="如 2000" oninput="calcCompound()">
+          </div>
+          <div class="calc-input-group">
+            <div class="calc-input-label">预期年化收益率（%）</div>
+            <input class="input" type="number" id="calc-cp-rate" placeholder="如 8" oninput="calcCompound()" step="0.1">
+          </div>
+          <div class="calc-input-group">
+            <div class="calc-input-label">投资年限（年）</div>
+            <input class="input" type="number" id="calc-cp-years" placeholder="如 20" oninput="calcCompound()">
+          </div>
+          <div class="calc-output" id="calc-compound-output" style="display:none">
+            <div class="calc-result-highlight">
+              <div class="rh-label">最终金额</div>
+              <div class="rh-value" id="cp-final">—</div>
+            </div>
+            <div class="calc-result-row">
+              <span class="cr-label">总投入</span>
+              <span class="cr-value" id="cp-invested">—</span>
+            </div>
+            <div class="calc-result-row">
+              <span class="cr-label">总收益</span>
+              <span class="cr-value" id="cp-profit" style="color:var(--phase1)">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="calc-tool-card" id="calc-rule72">
+      <div class="calc-tool-header" onclick="toggleCalcCard('calc-rule72')">
+        <div class="calc-tool-title"><span>⚡</span> 72法则可视化</div>
+        <span class="calc-tool-toggle">▼</span>
+      </div>
+      <div class="calc-tool-body">
+        <div class="calc-tool-inner">
+          <div class="calc-input-group">
+            <div class="calc-input-label">年化收益率（%）</div>
+            <input class="input" type="number" id="calc-72-rate" placeholder="如 8" oninput="calcRule72()" step="0.1">
+          </div>
+          <div class="calc-output" id="calc-72-output" style="display:none">
+            <div class="rule72-card">
+              <div style="font-size:13px;color:var(--text-light)">本金翻倍所需年数</div>
+              <div class="rule72-formula">72 ÷ <span id="r72-rate">—</span> =</div>
+              <div class="rule72-result" id="r72-years">—</div>
+              <div style="font-size:12px;color:var(--text-light);margin-top:8px">在年化 <span id="r72-rate2">—</span>% 收益下，你的本金大约 <span id="r72-years2">—</span> 年翻一倍</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="calc-tool-card" id="calc-growth">
+      <div class="calc-tool-header" onclick="toggleCalcCard('calc-growth')">
+        <div class="calc-tool-title"><span>📋</span> 收益增长表</div>
+        <span class="calc-tool-toggle">▼</span>
+      </div>
+      <div class="calc-tool-body">
+        <div class="calc-tool-inner">
+          <div class="calc-input-group">
+            <div class="calc-input-label">初始本金（元）</div>
+            <input class="input" type="number" id="calc-gt-principal" placeholder="如 10000" oninput="calcGrowthTable()">
+          </div>
+          <div class="calc-input-group">
+            <div class="calc-input-label">每月定投（元）</div>
+            <input class="input" type="number" id="calc-gt-monthly" placeholder="如 2000" oninput="calcGrowthTable()">
+          </div>
+          <div class="calc-input-group">
+            <div class="calc-input-label">年化收益率（%）</div>
+            <input class="input" type="number" id="calc-gt-rate" placeholder="如 8" oninput="calcGrowthTable()" step="0.1">
+          </div>
+          <div class="calc-input-group">
+            <div class="calc-input-label">投资年限（年）</div>
+            <input class="input" type="number" id="calc-gt-years" placeholder="如 20" oninput="calcGrowthTable()">
+          </div>
+          <div class="calc-output" id="calc-growth-output" style="display:none">
+            <div class="growth-table-wrapper">
+              <table class="calc-result-table" id="gt-table">
+                <thead>
+                  <tr><th>年份</th><th style="text-align:right">年末金额</th><th style="text-align:right">累计投入</th><th style="text-align:right">收益</th></tr>
+                </thead>
+                <tbody id="gt-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleCalcCard(id) {
+  document.getElementById(id).classList.toggle('expanded');
+}
+
+function calcPhases() {
+  const monthly = parseFloat(document.getElementById('calc-phases-monthly').value);
+  const table = document.getElementById('calc-phases-table');
+  if (!monthly || monthly <= 0) {
+    table.style.display = 'none';
+    return;
+  }
+  table.style.display = '';
+  document.getElementById('cp-phase1').textContent = formatMoney(monthly * 6);
+  document.getElementById('cp-phase2').textContent = formatMoney(monthly * 150);
+
+  const data = loadData();
+  const ideal = data.freedom.idealMonthly || monthly;
+  document.getElementById('cp-phase3').textContent = formatMoney(ideal * 150);
+}
+
+function calcCompound() {
+  const P = parseFloat(document.getElementById('calc-cp-principal').value) || 0;
+  const PMT = parseFloat(document.getElementById('calc-cp-monthly').value) || 0;
+  const annualRate = parseFloat(document.getElementById('calc-cp-rate').value) || 0;
+  const years = parseFloat(document.getElementById('calc-cp-years').value) || 0;
+
+  const output = document.getElementById('calc-compound-output');
+  if (annualRate <= 0 || years <= 0) {
+    output.style.display = 'none';
+    return;
+  }
+
+  const r = annualRate / 100 / 12;
+  const n = years * 12;
+
+  let finalValue;
+  if (r === 0) {
+    finalValue = P + PMT * n;
+  } else {
+    finalValue = P * Math.pow(1 + r, n) + PMT * (Math.pow(1 + r, n) - 1) / r;
+  }
+
+  const totalInvested = P + PMT * n;
+  const totalProfit = finalValue - totalInvested;
+
+  output.style.display = 'block';
+  document.getElementById('cp-final').textContent = formatMoney(finalValue);
+  document.getElementById('cp-invested').textContent = formatMoney(totalInvested);
+  document.getElementById('cp-profit').textContent = formatMoney(totalProfit);
+}
+
+function calcRule72() {
+  const rate = parseFloat(document.getElementById('calc-72-rate').value);
+  const output = document.getElementById('calc-72-output');
+  if (!rate || rate <= 0) {
+    output.style.display = 'none';
+    return;
+  }
+  const years = 72 / rate;
+  output.style.display = 'block';
+  document.getElementById('r72-rate').textContent = rate;
+  document.getElementById('r72-years').textContent = years.toFixed(1) + ' 年';
+  document.getElementById('r72-rate2').textContent = rate;
+  document.getElementById('r72-years2').textContent = years.toFixed(1);
+}
+
+function calcGrowthTable() {
+  const P = parseFloat(document.getElementById('calc-gt-principal').value) || 0;
+  const PMT = parseFloat(document.getElementById('calc-gt-monthly').value) || 0;
+  const annualRate = parseFloat(document.getElementById('calc-gt-rate').value) || 0;
+  const years = parseFloat(document.getElementById('calc-gt-years').value) || 0;
+
+  const output = document.getElementById('calc-growth-output');
+  if (annualRate <= 0 || years <= 0) {
+    output.style.display = 'none';
+    return;
+  }
+
+  output.style.display = 'block';
+  const r = annualRate / 100 / 12;
+  const tbody = document.getElementById('gt-body');
+  tbody.innerHTML = '';
+
+  let cumulativeInvested = 0;
+  let currentValue = 0;
+
+  for (let y = 1; y <= years; y++) {
+    const totalMonths = y * 12;
+    if (r === 0) {
+      currentValue = P + PMT * totalMonths;
+    } else {
+      currentValue = P * Math.pow(1 + r, totalMonths) + PMT * (Math.pow(1 + r, totalMonths) - 1) / r;
+    }
+    cumulativeInvested = P + PMT * totalMonths;
+    const profit = currentValue - cumulativeInvested;
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>第 ${y} 年</td>
+      <td class="value-cell">${formatMoney(currentValue)}</td>
+      <td class="value-cell">${formatMoney(cumulativeInvested)}</td>
+      <td class="value-cell" style="color:var(--phase1)">${formatMoney(profit)}</td>
+    `;
+    tbody.appendChild(row);
+  }
+}
+
+// ============================================
+// 模块3：收入升级路径
+// ============================================
+
+function renderIncomePath(container) {
+  const data = loadData();
+  const currentLevel = data.incomeLevel || 1;
+
+  const levels = [
+    {
+      level: 1,
+      medal: '🥉',
+      title: '出售单份时间',
+      subtitle: '打工 · 用时间换钱',
+      desc: '用时间换钱，收入有上限。提升专业技能可以提高单位时间的价值。',
+      tags: ['⏰ 时间换钱', '📊 收入有天花板', '💼 稳定但有限'],
+      advice: '提升专业技能，提高单位时间价值。学习新技能、考取证书、积累行业经验。',
+      unlock: null,
+      color: 'var(--level1)',
+    },
+    {
+      level: 2,
+      medal: '🥈',
+      title: '批量出售时间',
+      subtitle: '副业 · 作品 · 课程',
+      desc: '一次劳动多次收益。打造可复制的产品或内容，让同一份劳动持续产生回报。',
+      tags: ['🔄 一次劳动多次收益', '📦 可复制产品', '🌐 杠杆效应'],
+      advice: '打造可复制的产品/内容/体系。写书、录课、做自媒体、开发工具。',
+      unlock: '积累专业技能和经验',
+      color: 'var(--level2)',
+    },
+    {
+      level: 3,
+      medal: '🥇',
+      title: '用钱/资产赚钱',
+      subtitle: '投资 · 股权 · 资产',
+      desc: '财富放大最快的方式。让钱为你工作，通过投资和资产配置实现复利增长。',
+      tags: ['💰 钱生钱', '📈 复利效应', '🏢 资产配置'],
+      advice: '建立投资习惯，学习资产配置。股票、基金、房产、股权投资。',
+      unlock: '有一定本金积累',
+      color: 'var(--level3)',
+    },
+  ];
+
+  const current = levels.find(l => l.level === currentLevel) || levels[0];
+
+  const stepsVisual = levels.map(l => `
+    <div class="level-step-visual step-${l.level} ${l.level === currentLevel ? 'step-current' : ''}" onclick="setIncomeLevel(${l.level})">
+      ${l.medal} L${l.level}
+    </div>
+  `).join('');
+
+  container.innerHTML = `
+    <div class="level-steps-visual">
+      ${stepsVisual}
+    </div>
+
+    <div class="income-current-display">
+      <div class="income-current-icon">${current.medal}</div>
+      <div class="income-current-name">Level ${current.level} - ${current.title}</div>
+      <div class="income-current-desc">${current.subtitle}</div>
+    </div>
+
+    ${levels.map(l => `
+      <div class="level-card ${l.level === currentLevel ? 'level-current' : ''}"
+           style="--level-color: ${l.color}"
+           onclick="setIncomeLevel(${l.level})">
+        <div class="level-card-header">
+          <span class="level-medal">${l.medal}</span>
+          <div class="level-title-area">
+            <div class="level-title" style="color:${l.color}">Level ${l.level} · ${l.title}</div>
+            <div class="level-subtitle">${l.subtitle}</div>
+          </div>
+          ${l.level === currentLevel ? '<span class="level-current-badge">当前</span>' : ''}
+        </div>
+        <div class="level-desc">${l.desc}</div>
+        <div class="level-tags">
+          ${l.tags.map(t => `<span class="level-tag">${t}</span>`).join('')}
+        </div>
+        <div class="level-advice" style="border-left-color:${l.color}">
+          💡 ${l.advice}
+        </div>
+        ${l.unlock && l.level !== currentLevel ? `<div class="level-unlock-hint">🔓 解锁条件：${l.unlock}</div>` : ''}
+      </div>
+    `).join('')}
+  `;
+}
+
+function setIncomeLevel(level) {
+  const data = loadData();
+  if (data.incomeLevel === level) return;
+  data.incomeLevel = level;
+  saveData(data);
+  const labels = { 1: 'Level 1 - 出售单份时间', 2: 'Level 2 - 批量出售时间', 3: 'Level 3 - 用钱赚钱' };
+  showToast(`已切换到 ${labels[level]}`, '📈');
+  renderIncomePath(document.getElementById('sub-page-container'));
+}
+
+// ============================================
+// 模块3：四大支柱（详细页面，使用 pillar-detail-* 类名）
+// ============================================
+
+function renderPillars(container) {
+  const data = loadData();
+  const p = data.pillars || { dream: 0, goal: 0, values: 0, strategy: 0 };
+  const avg = (p.dream + p.goal + p.values + p.strategy) / 4;
+  const avgPercent = avg / 5 * 100;
+
+  const pillars = [
+    {
+      key: 'dream',
+      icon: '🌈',
+      title: '梦想',
+      subtitle: '明确想要的生活',
+      question: '你清楚自己真正想要的生活是什么吗？',
+      links: [{ label: '→ 梦想清单', page: 'dreams', sub: null }],
+      hasReflection: false,
+    },
+    {
+      key: 'goal',
+      icon: '🎯',
+      title: '目标',
+      subtitle: '量化为数字+时间+画面',
+      question: '你的财务目标是否具体到数字和时间？',
+      links: [{ label: '→ 72小时法则', page: 'tasks', sub: null }],
+      hasReflection: false,
+      extra: '⏰ 72小时行动提醒：决定后72小时内迈出第一步，否则永远只是空想',
+    },
+    {
+      key: 'values',
+      icon: '💎',
+      title: '价值观',
+      subtitle: '让价值观与财富目标一致',
+      question: '你认为金钱对你意味着什么？自由、安全、还是能力？',
+      links: [],
+      hasReflection: true,
+      reflectionKey: 'values_reflection',
+    },
+    {
+      key: 'strategy',
+      icon: '🗺️',
+      title: '策略',
+      subtitle: '增收+储蓄+投资+还债',
+      question: '你是否有清晰的财务策略？',
+      links: [
+        { label: '→ 金鹅账户', page: 'goose', sub: null },
+        { label: '→ 自由之路', page: 'freedom', sub: null },
+        { label: '→ 债务管理', page: 'more', sub: 'debt' },
+        { label: '→ 收入升级', page: 'more', sub: 'income-path' },
+      ],
+      hasReflection: false,
+    },
+  ];
+
+  container.innerHTML = `
+    <div class="pillars-overview">
+      <div class="pillars-overview-score">${avg.toFixed(1)}</div>
+      <div class="pillars-overview-label">四大支柱平均分 / 5.0</div>
+      <div class="pillars-overview-bar">
+        <div class="pillars-overview-fill" style="width:${avgPercent}%"></div>
+      </div>
+    </div>
+
+    ${pillars.map(pillar => {
+      const score = p[pillar.key] || 0;
+      const stars = Array.from({ length: 5 }, (_, i) =>
+        `<span class="pillar-star ${i < score ? 'filled' : ''}">⭐</span>`
+      ).join('');
+
+      return `
+        <div class="pillar-detail-card">
+          <div class="pillar-header">
+            <span class="pillar-detail-icon">${pillar.icon}</span>
+            <div class="pillar-detail-title-area">
+              <div class="pillar-detail-title">${pillar.title}</div>
+              <div class="pillar-detail-subtitle">${pillar.subtitle}</div>
+            </div>
+            <span class="pillar-score-badge">${score}/5</span>
+          </div>
+
+          <div class="pillar-slider-container">
+            <div class="pillar-slider-label">
+              <span>0</span>
+              <span>${stars}</span>
+              <span>5</span>
+            </div>
+            <input type="range" class="pillar-slider" min="0" max="5" step="1" value="${score}"
+                   oninput="updatePillarScore('${pillar.key}', this.value, this)">
+          </div>
+
+          <div class="pillar-guide-question">
+            ${pillar.question}
+          </div>
+
+          ${pillar.extra ? `<div class="pillar-guide-question" style="border-left-color:var(--acct-joy);margin-top:6px">${pillar.extra}</div>` : ''}
+
+          ${pillar.hasReflection ? `
+            <div class="pillar-reflection">
+              <div class="pillar-reflection-toggle" onclick="toggleReflection(this)">
+                ✍️ 展开反思区 <span>▼</span>
+              </div>
+              <div class="pillar-reflection-area">
+                <textarea placeholder="写下你的思考..." onblur="saveReflection('${pillar.reflectionKey}', this.value)">${(data.pillars[pillar.reflectionKey] || '')}</textarea>
+              </div>
+            </div>
+          ` : ''}
+
+          ${pillar.links.length > 0 ? `
+            <div class="pillar-link-row">
+              ${pillar.links.map(l => `<button class="pillar-link-btn" onclick="navigate('${l.page}'${l.sub ? `, '${l.sub}'` : ''})">${l.label}</button>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }).join('')}
+  `;
+}
+
+function updatePillarScore(key, val, sliderEl) {
+  const data = loadData();
+  data.pillars[key] = parseInt(val);
+  saveData(data);
+
+  const score = parseInt(val);
+  const card = sliderEl.closest('.pillar-detail-card');
+  const starsContainer = card.querySelector('.pillar-slider-label span:nth-child(2)');
+  if (starsContainer) {
+    const stars = starsContainer.querySelectorAll('.pillar-star');
+    stars.forEach((s, i) => {
+      s.classList.toggle('filled', i < score);
+    });
+  }
+
+  const badge = card.querySelector('.pillar-score-badge');
+  if (badge) badge.textContent = `${score}/5`;
+
+  const p = data.pillars;
+  const avg = (p.dream + p.goal + p.values + p.strategy) / 4;
+  const avgPercent = avg / 5 * 100;
+  const overviewScore = document.querySelector('.pillars-overview-score');
+  const overviewFill = document.querySelector('.pillars-overview-fill');
+  if (overviewScore) overviewScore.textContent = avg.toFixed(1);
+  if (overviewFill) overviewFill.style.width = avgPercent + '%';
+}
+
+function toggleReflection(toggleEl) {
+  const area = toggleEl.nextElementSibling;
+  area.classList.toggle('expanded');
+  const arrow = toggleEl.querySelector('span');
+  if (arrow) {
+    arrow.textContent = area.classList.contains('expanded') ? '▲' : '▼';
+  }
+}
+
+function saveReflection(key, val) {
+  const data = loadData();
+  data.pillars[key] = val;
+  saveData(data);
+  showToast('反思已保存', '✍️');
+}
+
+// ============================================
+// 初始化
+// ============================================
+
+function init() {
+  if (!localStorage.getItem(STORAGE_KEY)) {
+    saveData(DEFAULT_DATA);
+  }
+
+  updateGreeting();
+  renderPage();
+  setInterval(updateGreeting, 60000);
+
+  console.log('💰 钱钱日记已就绪');
+  console.log('   当前页面:', currentPage);
+  console.log('   数据状态:', loadData() ? 'OK' : 'ERROR');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+window.__QQRJ__ = {
+  loadData,
+  saveData,
+  navigate,
+  renderPage,
+  showToast,
+  confetti,
+  formatMoney,
+  getGreeting,
+  DEFAULT_DATA,
+  getCurrentPage: () => currentPage,
+  getSubPage: () => subPage,
+};
+</script>
+</body>
+</html>
