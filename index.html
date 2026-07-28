@@ -83,10 +83,6 @@
 
 html, body {
   height: 100%;
-  /* dvh: 动态视口高度，iOS 15.4+ 正确处理地址栏/home indicator，避免 100vh 溢出 */
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
-  min-height: 100dvh;
   overflow: hidden;
 }
 
@@ -116,10 +112,7 @@ body {
 #app {
   display: flex;
   flex-direction: column;
-  /* 精确匹配可视区域：dvh 优先，回退 fill-available 与 100vh */
-  height: 100vh;
-  height: -webkit-fill-available;
-  height: 100dvh;
+  height: 100%;
   max-width: 480px;
   margin: 0 auto;
   width: 100%;
@@ -183,9 +176,9 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 4px 16px 8px;
+  padding-bottom: calc(var(--nav-height) + 24px);
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  min-height: 0;
 }
 
 /* 页面切换动画 */
@@ -402,8 +395,12 @@ body {
    底部导航栏
    ============================================ */
 #bottom-nav {
-  flex-shrink: 0;
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
   width: 100%;
+  max-width: 480px;
   height: var(--nav-height);
   background: rgba(255,255,255,0.92);
   backdrop-filter: blur(24px);
@@ -413,7 +410,7 @@ body {
   align-items: center;
   justify-content: space-around;
   padding: 0 8px;
-  padding-bottom: env(safe-area-inset-bottom, 0);
+  z-index: 100;
   box-shadow: 0 -4px 24px rgba(61,43,31,0.06);
 }
 
