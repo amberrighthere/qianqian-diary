@@ -83,8 +83,10 @@
 
 html, body {
   height: 100%;
+  /* dvh: 动态视口高度，iOS 15.4+ 正确处理地址栏/home indicator，避免 100vh 溢出 */
   min-height: 100vh;
   min-height: -webkit-fill-available;
+  min-height: 100dvh;
   overflow: hidden;
 }
 
@@ -114,9 +116,10 @@ body {
 #app {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 100vh;
-  min-height: -webkit-fill-available;
+  /* 精确匹配可视区域：dvh 优先，回退 fill-available 与 100vh */
+  height: 100vh;
+  height: -webkit-fill-available;
+  height: 100dvh;
   max-width: 480px;
   margin: 0 auto;
   width: 100%;
@@ -179,7 +182,8 @@ body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 4px 16px calc(var(--nav-height) + env(safe-area-inset-bottom, 0px) + 8px);
+  /* 仅给 fixed 底部 nav 留位置；nav 自身已处理 safe-area-inset-bottom，这里不重复计算 */
+  padding: 4px 16px calc(var(--nav-height) + 8px);
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   min-height: 0;
