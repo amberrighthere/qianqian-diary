@@ -188,7 +188,9 @@ body {
 }
 
 .page.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
 }
 
 @keyframes fadeSlideIn {
@@ -1411,8 +1413,8 @@ body {
 .hero-card {
   background: linear-gradient(135deg, #FFF9E6 0%, #FFF3C4 50%, #FFEBA8 100%);
   border-radius: var(--radius);
-  padding: 22px 20px;
-  margin-bottom: 12px;
+  padding: 28px 22px;
+  margin-bottom: 16px;
   box-shadow: var(--shadow-md);
   border: 1px solid rgba(201,147,0,0.12);
   position: relative;
@@ -1602,7 +1604,7 @@ body {
 .quote-card-v2 {
   background: var(--card-bg);
   border-radius: var(--radius);
-  padding: 20px 18px;
+  padding: 24px 20px;
   margin-bottom: 12px;
   box-shadow: var(--shadow-sm);
   border: 1px solid rgba(201,147,0,0.06);
@@ -1649,6 +1651,13 @@ body {
   opacity: 0.5;
   margin-top: 10px;
   text-align: right;
+}
+
+/* 首页底部自适应填充 —— 吸收剩余空间，消除留白 */
+.home-spacer {
+  flex: 1;
+  min-height: 60px;
+  background: linear-gradient(180deg, transparent 0%, rgba(255,248,240,0.5) 100%);
 }
 
 /* 梦想编辑模态框内的删除按钮 */
@@ -4023,6 +4032,9 @@ function renderHome() {
     '<div class="quote-source-v2" id="quote-source">' + QUOTES[0].source + '</div>' +
     '<div class="quote-hint">点击换一条 →</div>' +
     '</div>';
+
+  // === 区域5：自适应底部填充（消除留白）===
+  html += '<div class="home-spacer"></div>';
 
   el.innerHTML = html;
 
