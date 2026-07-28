@@ -175,8 +175,7 @@ body {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 4px 16px 8px;
-  padding-bottom: var(--nav-height);
+  padding: 4px 16px;
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 }
@@ -395,12 +394,8 @@ body {
    底部导航栏
    ============================================ */
 #bottom-nav {
-  position: fixed;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
+  flex-shrink: 0;
   width: 100%;
-  max-width: 480px;
   height: var(--nav-height);
   background: rgba(255,255,255,0.92);
   backdrop-filter: blur(24px);
@@ -410,7 +405,6 @@ body {
   align-items: center;
   justify-content: space-around;
   padding: 0 8px;
-  z-index: 100;
   box-shadow: 0 -4px 24px rgba(61,43,31,0.06);
 }
 
