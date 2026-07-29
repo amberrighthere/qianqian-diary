@@ -88,17 +88,10 @@
 }
 
 html, body {
-  /* 用 100% + dvh 兜底：iOS Safari 16.4+ 支持 100dvh，能避开地址栏/工具栏高度变化 */
-  height: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: var(--real-vh, 100svh);   /* JS 动态计算 > svh 兜底 */
   overflow: hidden;
-  /* 关键修复 #1：禁止 iOS Safari 的橡皮筋回弹，避免拉出大段空白 */
   overscroll-behavior: none;
-  /* 关键修复 #2：禁止 iOS 的 touch 回弹链 */
-  position: fixed;
-  inset: 0;
-  width: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -112,8 +105,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   display: flex;
   flex-direction: column;
-  /* 关键修复 #3：body 不要自身滚动，只让 #main-content 滚动；用 overscroll 阻止回弹冒泡 */
-  overscroll-behavior-y: contain;
 }
 
 /* ============================================
@@ -130,7 +121,6 @@ body {
   display: flex;
   flex-direction: column;
   height: 100%;
-  height: 100dvh;            /* iOS Safari 16.4+ 正确处理地址栏/工具栏高度 */
   max-width: 480px;
   margin: 0 auto;
   width: 100%;
@@ -195,12 +185,9 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 4px 16px;
-  /* 关键修复 #4：底部 padding 必须给到 nav 高度 + Home Indicator，iOS 上 Home Indicator 约 34px */
   padding-bottom: calc(var(--nav-height) + var(--sai-bottom));
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  /* 阻止 iOS 滚动链冒泡到 body */
-  overscroll-behavior: contain;
 }
 
 /* 页面切换动画 */
@@ -423,7 +410,6 @@ body {
   transform: translateX(-50%);
   width: 100%;
   max-width: 480px;
-  /* 关键修复 #5：把 Home Indicator 算进 nav 自身高度，这样底部背景会延伸到屏幕底 */
   height: calc(var(--nav-height) + var(--sai-bottom));
   background: rgba(255,255,255,0.92);
   backdrop-filter: blur(24px);
@@ -433,7 +419,6 @@ body {
   align-items: center;
   justify-content: space-around;
   padding: 0 8px;
-  /* 关键修复 #6：图标区域保持 52px，多出的高度全部给到 padding-bottom，让 Home Indicator 落在背景里 */
   padding-bottom: var(--sai-bottom);
   z-index: 100;
   box-shadow: 0 -4px 24px rgba(61,43,31,0.06);
@@ -6309,6 +6294,30 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// ===== iOS Safari 底部空白修复：动态设置视口高度 =====
+(function() {
+  const app = document.getElementById('app');
+  if (!app) return;
+  
+  function setRealHeight() {
+    // visualViewport.height 是 iOS Safari 上最准确的「实际可视高度」
+    // 它排除了底部工具栏和 Home Indicator，是屏幕真正能显示内容的区域
+    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty('--real-vh', h + 'px');
+  }
+  
+  setRealHeight();
+  // 监听地址栏/工具栏缩回和展开
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', setRealHeight);
+    window.visualViewport.addEventListener('scroll', setRealHeight);
+  }
+  window.addEventListener('resize', setRealHeight);
+  window.addEventListener('orientationchange', function() {
+    setTimeout(setRealHeight, 100);
+  });
+})();
 
 window.__QQRJ__ = {
   loadData,
