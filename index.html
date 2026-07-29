@@ -188,9 +188,7 @@ body {
 }
 
 .page.active {
-  display: flex;
-  flex-direction: column;
-  min-height: 100%;
+  display: block;
 }
 
 @keyframes fadeSlideIn {
@@ -1651,13 +1649,6 @@ body {
   opacity: 0.5;
   margin-top: 10px;
   text-align: right;
-}
-
-/* 首页底部自适应填充 —— 吸收剩余空间，消除留白 */
-.home-spacer {
-  flex: 1;
-  min-height: 60px;
-  background: linear-gradient(180deg, transparent 0%, rgba(255,248,240,0.5) 100%);
 }
 
 /* 梦想编辑模态框内的删除按钮 */
@@ -4032,9 +4023,6 @@ function renderHome() {
     '<div class="quote-source-v2" id="quote-source">' + QUOTES[0].source + '</div>' +
     '<div class="quote-hint">点击换一条 →</div>' +
     '</div>';
-
-  // === 区域5：自适应底部填充（消除留白）===
-  html += '<div class="home-spacer"></div>';
 
   el.innerHTML = html;
 
