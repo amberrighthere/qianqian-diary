@@ -88,7 +88,7 @@
 }
 
 html, body {
-  height: var(--real-vh, 100svh);   /* JS 动态计算 > svh 兜底 */
+  height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
@@ -6294,30 +6294,6 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
-
-// ===== iOS Safari 底部空白修复：动态设置视口高度 =====
-(function() {
-  const app = document.getElementById('app');
-  if (!app) return;
-  
-  function setRealHeight() {
-    // visualViewport.height 是 iOS Safari 上最准确的「实际可视高度」
-    // 它排除了底部工具栏和 Home Indicator，是屏幕真正能显示内容的区域
-    var h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
-    document.documentElement.style.setProperty('--real-vh', h + 'px');
-  }
-  
-  setRealHeight();
-  // 监听地址栏/工具栏缩回和展开
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', setRealHeight);
-    window.visualViewport.addEventListener('scroll', setRealHeight);
-  }
-  window.addEventListener('resize', setRealHeight);
-  window.addEventListener('orientationchange', function() {
-    setTimeout(setRealHeight, 100);
-  });
-})();
 
 window.__QQRJ__ = {
   loadData,
