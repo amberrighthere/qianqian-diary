@@ -6295,6 +6295,34 @@ function init() {
 
 document.addEventListener('DOMContentLoaded', init);
 
+// ===== Safari 浏览器底部空白修复 =====
+// PWA 模式没有底部工具栏，Safari 浏览器有约50px工具栏
+// 导致 position:fixed;bottom:0 停在工具栏上方出现空白
+(function() {
+  var isStandalone = window.navigator.standalone === true;
+  var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  
+  // 只在 Safari 浏览器模式（非 PWA）下执行
+  if (isStandalone || !isIOS) return;
+  
+  var nav = document.getElementById('bottom-nav');
+  if (!nav) return;
+  
+  // 计算 Safari 工具栏高度 = window.innerHeight - visualViewport.height
+  function fixNav() {
+    if (!window.visualViewport) return;
+    var toolbarH = window.innerHeight - window.visualViewport.height;
+    if (toolbarH > 0) {
+      // 让 nav 往下移，覆盖工具栏
+      nav.style.bottom = '-' + toolbarH + 'px';
+    }
+  }
+  
+  fixNav();
+  window.visualViewport.addEventListener('resize', fixNav);
+  window.visualViewport.addEventListener('scroll', fixNav);
+})();
+
 window.__QQRJ__ = {
   loadData,
   saveData,
